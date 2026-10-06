@@ -1,0 +1,2237 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Golang 20 Bài Tập Cơ Bản — Interactive Code & Workbench</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            gopher: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              200: '#bae6fd',
+              400: '#38bdf8',
+              500: '#00add8', // Go Cyan
+              600: '#0284c7',
+              700: '#0369a1',
+              900: '#0c4a6e',
+            },
+            darkbg: '#0a0d13',
+            cardbg: '#121720',
+            terminalbg: '#080b10',
+            bordercol: '#242b35',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #0a0d13; }
+    ::-webkit-scrollbar-thumb { background: #242b35; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #00add8; }
+    .glow-gopher { box-shadow: 0 0 25px -5px rgba(0, 173, 216, 0.25); }
+    .code-kw { color: #ff7b72; font-weight: 600; }
+    .code-fn { color: #d2a8ff; }
+    .code-str { color: #a5d6ff; }
+    .code-num { color: #79c0ff; }
+    .code-cm { color: #8b949e; font-style: italic; }
+    .code-type { color: #7ee787; font-weight: 600; }
+    .nav-active {
+      background: rgba(0, 173, 216, 0.12) !important;
+      border-color: #00add8 !important;
+      color: #38bdf8 !important;
+    }
+  </style>
+</head>
+<body class="bg-darkbg text-slate-200 font-sans min-h-screen antialiased selection:bg-gopher-500 selection:text-slate-950 flex flex-col">
+
+  <!-- Top Sticky Navigation Bar -->
+  <header class="sticky top-0 z-50 backdrop-blur-md bg-darkbg/90 border-b border-bordercol">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+      <div class="flex items-center gap-3 min-w-max">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-600 to-gopher-400 flex items-center justify-center font-black text-black text-xl shadow-lg shadow-gopher-500/20">
+          Go
+        </div>
+        <div>
+          <a href="#" class="font-bold text-base sm:text-lg text-white hover:text-gopher-400 transition-colors flex items-center gap-2">
+            Golang 20 Bài Tập Cơ Bản
+            <span class="text-[10px] bg-gopher-500/10 text-gopher-400 border border-gopher-500/30 px-2 py-0.5 rounded-full font-mono">Interactive Lab</span>
+          </a>
+          <p class="text-xs text-slate-400 hidden sm:block">Từ cú pháp fmt đến thuật toán số học & đếm thời gian</p>
+        </div>
+      </div>
+
+      <!-- Quick Search Bar -->
+      <div class="flex-1 max-w-md hidden md:block">
+        <div class="relative">
+          <input type="text" id="exerciseSearchInput" oninput="filterExercises()" placeholder="Tìm kiếm bài tập (vd: fibonacci, iota, snt, bmi)..." class="w-full bg-cardbg border border-bordercol rounded-xl px-3.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-gopher-400 font-mono transition">
+          <span class="absolute right-3 top-2 text-[10px] text-slate-500 font-mono">⌘K</span>
+        </div>
+      </div>
+
+      <!-- Quick Stats & Theme Badge -->
+      <div class="flex items-center gap-2">
+        <span class="text-xs font-mono px-3 py-1 rounded-xl bg-cardbg border border-bordercol text-slate-400">
+          <span class="text-gopher-400 font-bold" id="completedCounter">0</span> / 20 Đã thử
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Multi-Column Interactive Workspace -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+    <!-- Left Navigation: Exercise List -->
+    <aside class="lg:col-span-4 flex flex-col gap-3">
+      <!-- Category Filter Pills -->
+      <div class="bg-cardbg p-2 rounded-2xl border border-bordercol flex gap-1 overflow-x-auto text-[11px] font-mono">
+        <button onclick="setCategoryFilter('all')" id="cat-all" class="cat-pill active px-3 py-1.5 rounded-xl bg-gopher-500 text-slate-950 font-bold transition">Tất cả (20)</button>
+        <button onclick="setCategoryFilter('basic')" id="cat-basic" class="cat-pill px-3 py-1.5 rounded-xl hover:text-white text-slate-400 transition">Cơ bản</button>
+        <button onclick="setCategoryFilter('control')" id="cat-control" class="cat-pill px-3 py-1.5 rounded-xl hover:text-white text-slate-400 transition">Rẽ nhánh</button>
+        <button onclick="setCategoryFilter('loop')" id="cat-loop" class="cat-pill px-3 py-1.5 rounded-xl hover:text-white text-slate-400 transition">Vòng lặp</button>
+        <button onclick="setCategoryFilter('math')" id="cat-math" class="cat-pill px-3 py-1.5 rounded-xl hover:text-white text-slate-400 transition">Toán học</button>
+      </div>
+
+      <!-- Exercise Cards Container -->
+      <div id="exerciseListContainer" class="bg-cardbg border border-bordercol rounded-2xl p-2 space-y-1.5 max-h-[calc(100vh-170px)] overflow-y-auto">
+        <!-- Rendered by JavaScript -->
+      </div>
+    </aside>
+
+    <!-- Right Panel: Interactive Workbench, Code Viewer & Explanations -->
+    <section class="lg:col-span-8 space-y-6">
+
+      <!-- Exercise Header Info Banner -->
+      <div class="bg-cardbg border border-bordercol rounded-3xl p-6 glow-gopher space-y-3">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="flex items-center gap-2">
+            <span id="bannerIndex" class="font-mono text-xs px-2.5 py-0.5 rounded-lg bg-gopher-500/20 text-gopher-400 border border-gopher-500/30 font-bold">Bài #01</span>
+            <span id="bannerCategory" class="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-slate-800 text-slate-400">Cú pháp & fmt</span>
+          </div>
+          <button onclick="markAsDone()" id="btnMarkDone" class="text-xs px-3 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium transition flex items-center gap-1.5 border border-bordercol">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            <span>Đánh dấu đã hiểu</span>
+          </button>
+        </div>
+
+        <h2 id="bannerTitle" class="text-xl sm:text-2xl font-bold text-white tracking-tight">
+          Hello World & fmt formatting
+        </h2>
+        <p id="bannerDesc" class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+          Tìm hiểu cách in chuỗi và khai thác sức mạnh của gói fmt trong Golang với các định dạng %v, %+v, %#v, %T, %b, %x.
+        </p>
+      </div>
+
+      <!-- Interactive Sandbox / Playground -->
+      <div class="bg-cardbg border border-bordercol rounded-3xl p-5 sm:p-6 space-y-5">
+        <div class="flex items-center justify-between pb-3 border-b border-bordercol">
+          <h3 class="font-bold text-sm text-white flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+            Interactive Simulator (Thử Nghiệm Ngay)
+          </h3>
+          <span class="text-[11px] font-mono text-slate-400">Browser Go Runtime</span>
+        </div>
+
+        <!-- Dynamic Inputs Area -->
+        <div id="interactiveInputsArea" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <!-- Populated by JS for each exercise -->
+        </div>
+
+        <!-- Action Run Button -->
+        <div class="flex items-center justify-between pt-1">
+          <button onclick="executeCurrentExercise()" class="px-5 py-2.5 rounded-xl bg-gopher-500 hover:bg-gopher-600 text-slate-950 font-bold text-xs sm:text-sm flex items-center gap-2 shadow-lg shadow-gopher-500/20 transition active:scale-95">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/></svg>
+            Chạy Thử Nghiệm Code
+          </button>
+          <span id="execTimer" class="text-[11px] font-mono text-slate-500">Execution time: ~0.00ms</span>
+        </div>
+
+        <!-- Simulated Terminal Output Window -->
+        <div class="bg-terminalbg rounded-2xl border border-bordercol overflow-hidden font-mono text-xs">
+          <div class="flex items-center justify-between px-4 py-2.5 bg-slate-900/80 border-b border-bordercol text-slate-400">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-red-500/80"></span>
+              <span class="w-2.5 h-2.5 rounded-full bg-yellow-500/80"></span>
+              <span class="w-2.5 h-2.5 rounded-full bg-green-500/80"></span>
+              <span class="ml-1 text-slate-300">Terminal (stdout)</span>
+            </div>
+            <button onclick="clearTerminal()" class="hover:text-white transition">Clear</button>
+          </div>
+          <div id="terminalOutput" class="p-4 space-y-1 text-slate-300 min-h-[120px] max-h-[260px] overflow-y-auto leading-relaxed whitespace-pre font-mono">
+            <span class="text-slate-500 italic">// Bấm nút "Chạy Thử Nghiệm Code" để quan sát kết quả terminal của chương trình Go...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Source Code Tab & Key Deep-Dive Box -->
+      <div class="bg-cardbg border border-bordercol rounded-3xl overflow-hidden">
+        <div class="flex border-b border-bordercol bg-darkbg/50 px-4 pt-3 gap-2 overflow-x-auto">
+          <button onclick="switchTab('code')" id="tab-code-btn" class="px-4 py-2 rounded-t-xl text-xs sm:text-sm font-semibold border-b-2 border-gopher-400 text-white bg-cardbg transition whitespace-nowrap">
+            Mã Nguồn Go Hoàn Chỉnh (`main.go`)
+          </button>
+          <button onclick="switchTab('lines')" id="tab-lines-btn" class="px-4 py-2 rounded-t-xl text-xs sm:text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-white transition whitespace-nowrap flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+            Giải Thích Từng Dòng Code
+          </button>
+          <button onclick="switchTab('theory')" id="tab-theory-btn" class="px-4 py-2 rounded-t-xl text-xs sm:text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-white transition whitespace-nowrap">
+            Lý Thuyết & Mẹo Cốt Lõi
+          </button>
+        </div>
+
+        <!-- Tab 1: Code Display -->
+        <div id="tab-code-panel" class="p-5 sm:p-6 space-y-3">
+          <div class="flex items-center justify-between text-xs text-slate-400 font-mono">
+            <span>// Bạn có thể copy và chạy trực tiếp bằng: <code>go run main.go</code></span>
+            <button onclick="copyCurrentCode()" class="px-3 py-1 rounded-lg bg-darkbg border border-bordercol text-slate-300 hover:text-white hover:border-gopher-400 transition flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+              <span id="copyCodeText">Copy Code</span>
+            </button>
+          </div>
+          <div class="bg-terminalbg p-4 rounded-2xl border border-bordercol font-mono text-xs sm:text-sm text-slate-200 overflow-x-auto leading-relaxed">
+            <pre><code id="goSourceCodeDisplay"></code></pre>
+          </div>
+        </div>
+
+        <!-- Tab 2: Line-by-Line Explanation -->
+        <div id="tab-lines-panel" class="p-5 sm:p-6 space-y-4 hidden text-xs sm:text-sm text-slate-300 leading-relaxed">
+          <div class="flex items-center justify-between p-3.5 bg-darkbg rounded-2xl border border-cyan-500/20 text-xs text-cyan-300">
+            <span class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+              <strong>Phân tích dòng lệnh trọng tâm:</strong> Các dòng cú pháp lặp lại hoặc dòng trống được lược bỏ để tối đa hóa sự tập trung.
+            </span>
+            <span class="font-mono text-slate-400 text-[11px] hidden sm:inline">Go Spec 1.23+</span>
+          </div>
+          <div id="linesContentContainer" class="space-y-3 font-sans">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Tab 3: Theory & Explanations -->
+        <div id="tab-theory-panel" class="p-5 sm:p-6 space-y-4 hidden text-xs sm:text-sm text-slate-300 leading-relaxed">
+          <div id="theoryContentContainer" class="space-y-4">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <footer class="border-t border-bordercol bg-darkbg/90 mt-12 py-6 text-center text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <p>Hệ thống 20 bài tập Go tiêu chuẩn — CoffeeCode Interactive Learning Companion.</p>
+      <p class="font-mono">Go Version 1.23+ • Single-file Static Learning Architecture</p>
+    </div>
+  </footer>
+
+  <script>
+    // Audio Context for countdown beep
+    let audioCtx = null;
+    function playBeepSound() {
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime); // 880Hz A5 Beep
+        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.15);
+      } catch (e) {
+        console.warn('Audio Beep not supported:', e);
+      }
+    }
+
+    // Full 20 Exercises Database with Comprehensive Deep-Dive Theories
+    const exercisesData = [
+      {
+        id: 1,
+        cat: 'basic',
+        title: 'Hello World & fmt formatting',
+        desc: 'In chuỗi "Hello, Golang!" và sử dụng fmt.Printf để định dạng (%v, %+v, %#v, %T, %b, %x).',
+        inputs: [
+          { id: 'ex1_name', label: 'Tên hoặc chuỗi mẫu', type: 'text', val: 'Golang Gopher' },
+          { id: 'ex1_num', label: 'Số nguyên để soi nhị phân & hex', type: 'number', val: 42 }
+        ],
+        code: `package main
+
+import "fmt"
+
+type User struct {
+    Name string
+    Age  int
+}
+
+func main() {
+    fmt.Println("Hello, Golang!")
+
+    u := User{Name: "Gopher", Age: 15}
+    num := 42
+
+    // Minh họa các định dạng cốt lõi trong fmt.Printf
+    fmt.Printf("%%v  (Mặc định)       : %v\\n", u)
+    fmt.Printf("%%+v (Kèm tên trường) : %+v\\n", u)
+    fmt.Printf("%%#v (Cú pháp Go)     : %#v\\n", u)
+    fmt.Printf("%%T  (Kiểu dữ liệu)   : %T\\n", u)
+    fmt.Printf("%%b  (Hệ nhị phân)    : %b (từ số %d)\\n", num, num)
+    fmt.Printf("%%x  (Thập lục phân)  : %x (từ số %d)\\n", num, num)
+}`,
+        lines: [
+          { line: '5-8', code: 'type User struct {\n    Name string\n    Age  int\n}', exp: 'Khai báo kiểu cấu trúc `User` tùy chỉnh gồm 2 trường dữ liệu: `Name` (kiểu chuỗi `string`) và `Age` (kiểu số nguyên `int`). Đây là đơn vị xây dựng đối tượng thay thế cho class trong Go.' },
+          { line: '11', code: 'fmt.Println("Hello, Golang!")', exp: 'Gọi hàm `Println` từ thư viện `fmt` để xuất chuỗi ra stdout và tự động xuống dòng mới.' },
+          { line: '13', code: 'u := User{Name: "Gopher", Age: 15}', exp: 'Khởi tạo đối tượng `u` bằng cú pháp Struct Literal gán tên trường rõ ràng (`Key: Value`). Khuyên dùng cách này để không bị nhầm lẫn vị trí tham số.' },
+          { line: '14', code: 'num := 42', exp: 'Khai báo nhanh biến số nguyên `num` với giá trị 42 bằng toán tử ngắn `:=`.' },
+          { line: '17', code: 'fmt.Printf("%%v ...", u)', exp: '`%v`: Định dạng giá trị mặc định (Default Value Format). Với struct, Go in giá trị các trường trong ngoặc nhọn `{Gopher 15}`.' },
+          { line: '18', code: 'fmt.Printf("%%+v ...", u)', exp: '`%+v`: Định dạng struct kèm theo **tên từng trường** `{Name:Gopher Age:15}`. Rất quan trọng khi debug API hoặc xem log struct có nhiều trường.' },
+          { line: '19', code: 'fmt.Printf("%%#v ...", u)', exp: '`%#v`: In cấu trúc đối tượng dưới dạng biểu diễn mã nguồn Go chuẩn mực `main.User{Name:"Gopher", Age:15}`.' },
+          { line: '20', code: 'fmt.Printf("%%T ...", u)', exp: '`%T`: Trích xuất kiểu dữ liệu thực tế (Type) của đối tượng thông qua cơ chế Reflection ngầm định (`main.User`).' },
+          { line: '21', code: 'fmt.Printf("%%b ...", num, num)', exp: '`%b`: Chuyển đổi số nguyên sang biểu diễn nhị phân cơ số 2 (Base-2), ví dụ `42 -> 101010`.' },
+          { line: '22', code: 'fmt.Printf("%%x ...", num, num)', exp: '`%x`: Chuyển đổi số nguyên sang mã Hexadecimal cơ số 16 (Base-16), ví dụ `42 -> 2a`.' }
+        ],
+        theory: `
+          <div class="space-y-4 font-sans">
+            <div class="border-l-4 border-gopher-500 pl-4 py-1 bg-gopher-500/10 rounded-r-xl">
+              <h4 class="font-bold text-white text-base">🎯 1. Tư Duy Cốt Lõi Về Gói "fmt" Trong Go</h4>
+              <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                Khác với ngôn ngữ C bắt bạn phải nhớ chính xác từng ký tự định dạng (<code class="text-white font-mono">%d</code> cho số nguyên, <code class="text-white font-mono">%s</code> cho chuỗi), Go giới thiệu các <strong class="text-gopher-400">Universal Format Verbs</strong> như <code class="text-emerald-300 font-mono">%v</code> (Value) tự động phân giải cấu trúc dữ liệu theo cách tự nhiên nhất thông qua cơ chế Reflection ngầm định.
+              </p>
+            </div>
+
+            <div class="bg-darkbg p-4 rounded-2xl border border-bordercol space-y-2">
+              <h5 class="font-bold text-sm text-cyan-400">🔍 2. Phân Tích Chi Tiết Từng Format Specifier (% verb)</h5>
+              <div class="overflow-x-auto">
+                <table class="w-full text-left font-mono text-xs">
+                  <thead>
+                    <tr class="border-b border-bordercol text-slate-400">
+                      <th class="py-1.5 px-2">Verb</th>
+                      <th class="py-1.5 px-2">Ý nghĩa kỹ thuật</th>
+                      <th class="py-1.5 px-2">Kết quả in ra (với User{Name: "Gopher", Age: 15})</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-bordercol/50 text-slate-300">
+                    <tr><td class="py-1.5 px-2 text-gopher-400 font-bold">%v</td><td class="py-1.5 px-2">Giá trị mặc định (Default format)</td><td class="py-1.5 px-2 text-emerald-300">{Gopher 15}</td></tr>
+                    <tr><td class="py-1.5 px-2 text-gopher-400 font-bold">%+v</td><td class="py-1.5 px-2">Struct kèm <strong>tên trường (Field names)</strong></td><td class="py-1.5 px-2 text-emerald-300">{Name:Gopher Age:15}</td></tr>
+                    <tr><td class="py-1.5 px-2 text-gopher-400 font-bold">%#v</td><td class="py-1.5 px-2">Cú pháp khởi tạo Go (Go-syntax representation)</td><td class="py-1.5 px-2 text-emerald-300">main.User{Name:"Gopher", Age:15}</td></tr>
+                    <tr><td class="py-1.5 px-2 text-gopher-400 font-bold">%T</td><td class="py-1.5 px-2">Kiểu dữ liệu thực tế (Type of value)</td><td class="py-1.5 px-2 text-purple-300">main.User</td></tr>
+                    <tr><td class="py-1.5 px-2 text-gopher-400 font-bold">%b</td><td class="py-1.5 px-2">Hệ nhị phân (Binary Base-2)</td><td class="py-1.5 px-2 text-yellow-300">101010 (từ số 42)</td></tr>
+                    <tr><td class="py-1.5 px-2 text-gopher-400 font-bold">%x / %X</td><td class="py-1.5 px-2">Thập lục phân (Hexadecimal Base-16)</td><td class="py-1.5 px-2 text-yellow-300">2a / 2A</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              <div class="bg-darkbg p-3.5 rounded-xl border border-amber-500/30 space-y-1">
+                <span class="text-amber-400 font-bold">⚠️ Cạm bẫy người mới:</span>
+                <p class="text-slate-300">Khi debug lỗi API hoặc log JSON struct, in bằng <code class="text-slate-200">%v</code> sẽ làm bạn không biết giá trị nào tương ứng với field nào. Luôn ưu tiên dùng <strong class="text-white">%+v</strong> hoặc <strong class="text-white">%#v</strong> để log dữ liệu rõ ràng 100%.</p>
+              </div>
+              <div class="bg-darkbg p-3.5 rounded-xl border border-emerald-500/30 space-y-1">
+                <span class="text-emerald-400 font-bold">💡 Mẹo chuẩn Production:</span>
+                <p class="text-slate-300"><code class="text-slate-200">fmt.Printf</code> sử dụng Reflection nên có chi phí CPU nhẹ. Khi cần tốc độ cao trong Microservices, hãy dùng logger chuyên dụng có zero-allocation như <code class="text-cyan-300">uber-go/zap</code> hoặc <code class="text-cyan-300">rs/zerolog</code>.</p>
+              </div>
+            </div>
+
+            <div class="bg-slate-950 p-3 rounded-xl border border-bordercol flex justify-between items-center text-xs font-mono">
+              <span class="text-slate-400">Độ phức tạp: Time: <strong class="text-emerald-400">O(1)</strong></span>
+              <span class="text-slate-400">Space: <strong class="text-emerald-400">O(1)</strong></span>
+              <span class="text-slate-400">Package: <code class="text-gopher-400">"fmt"</code></span>
+            </div>
+          </div>
+        `,
+        run: (params) => {
+          const name = params.ex1_name || 'Gopher';
+          const n = parseInt(params.ex1_num) || 42;
+          return [
+            `Hello, Golang!`,
+            `--- Demo fmt.Printf ---`,
+            `%v  (Mặc định)       : {${name} ${n}}`,
+            `%+v (Kèm tên trường) : {Name:${name} Age:${n}}`,
+            `%#v (Cú pháp Go)     : main.User{Name:"${name}", Age:${n}}`,
+            `%T  (Kiểu dữ liệu)   : main.User`,
+            `%b  (Hệ nhị phân)    : ${n.toString(2)} (từ số ${n})`,
+            `%x  (Thập lục phân)  : ${n.toString(16)} (từ số ${n})`
+          ];
+        }
+      },
+      {
+        id: 2,
+        cat: 'basic',
+        title: 'Khai báo biến & Enum iota',
+        desc: 'Phân biệt var x int, x := 10, var x = 10 và hằng số const với khối iota để tạo bộ Enum trạng thái HTTP (200, 400, 404, 500).',
+        inputs: [
+          { id: 'ex2_status', label: 'Chọn mã HTTP để tra cứu', type: 'select', options: ['200 - OK', '400 - BadRequest', '404 - NotFound', '500 - InternalServerError'], val: '200 - OK' }
+        ],
+        code: `package main
+
+import "fmt"
+
+// Khai báo Enum HTTP Status bằng const và iota
+type HTTPStatus int
+
+const (
+    StatusOK                  HTTPStatus = 200
+    StatusBadRequest          HTTPStatus = 400
+    StatusNotFound            HTTPStatus = 404
+    StatusInternalServerError HTTPStatus = 500
+)
+
+func main() {
+    // 1. var tường minh (nhận Zero Value = 0 nếu không gán)
+    var a int
+    // 2. var suy luận kiểu tự động (Type inference)
+    var b = 10
+    // 3. Short declaration := (chỉ dùng trong thân hàm)
+    c := 20
+
+    fmt.Printf("a=%d (Zero Value), b=%d, c=%d\\n", a, b, c)
+
+    status := StatusNotFound
+    fmt.Printf("Mã trạng thái: %d\\n", status)
+}`,
+        lines: [
+          { line: '6', code: 'type HTTPStatus int', exp: 'Định nghĩa một kiểu dữ liệu mới tên `HTTPStatus` có kiểu cơ sở là `int`, giúp tăng độ an toàn kiểu (Type Safety), ngăn người dùng vô tình truyền nhầm biến int bất kỳ vào hàm.' },
+          { line: '8-13', code: 'const (\n    StatusOK HTTPStatus = 200\n    ...\n)', exp: 'Khối khai báo các hằng số không thể thay đổi tại thời điểm biên dịch (Compile-time constants). Trong trường hợp tạo mã tuần tự 0, 1, 2... ta chỉ cần viết `= iota` ở dòng đầu.' },
+          { line: '17', code: 'var a int', exp: 'Khai báo biến tường minh. Vì không gán giá trị khởi tạo, Go tự động gán **Zero Value** an toàn = `0` (không tồn tại rác bộ nhớ).' },
+          { line: '19', code: 'var b = 10', exp: 'Khai báo biến có giá trị khởi tạo; trình biên dịch tự động suy luận kiểu dữ liệu (Type Inference) cho `b` là `int`.' },
+          { line: '21', code: 'c := 20', exp: 'Toán tử rút gọn `:=` vừa khai báo vừa khởi tạo biến trong 1 bước. Chỉ được phép dùng **bên trong hàm**, không được dùng ngoài phạm vi package.' },
+          { line: '25-26', code: 'status := StatusNotFound\nfmt.Printf("Mã trạng thái: %d\\n", status)', exp: 'Gán biến `status` nhận hằng số `StatusNotFound` (404) và in ra màn hình.' }
+        ],
+        theory: `
+          <div class="space-y-4 font-sans">
+            <div class="border-l-4 border-gopher-500 pl-4 py-1 bg-gopher-500/10 rounded-r-xl">
+              <h4 class="font-bold text-white text-base">🎯 1. Ba Phong Cách Khai Báo Biến & Bản Chất Zero Value</h4>
+              <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                Trong C/C++, biến chưa gán giá trị sẽ chứa "dữ liệu rác" của ô nhớ cũ. Go giải quyết triệt để vấn đề an toàn này bằng quy tắc <strong class="text-gopher-400">Zero Value</strong> bắt buộc: biến số là 0, boolean là false, string là "" (rỗng), pointer/slice/map là nil. Không có bất kỳ vùng nhớ rác nào tồn tại!
+              </p>
+            </div>
+
+            <div class="bg-darkbg p-4 rounded-2xl border border-bordercol space-y-3 text-xs leading-relaxed">
+              <h5 class="font-bold text-sm text-cyan-400">🔍 2. So Sánh 3 Cú Pháp Khai Báo</h5>
+              <div class="space-y-2">
+                <p>• <code class="text-gopher-300 font-mono font-bold">var x int</code>: Khai báo tường minh kiểu dữ liệu. Thường dùng khi bạn <em>chưa có giá trị ngay</em> và muốn tận dụng Zero Value an toàn.</p>
+                <p>• <code class="text-emerald-300 font-mono font-bold">var x = 10</code>: Khai báo ở phạm vi toàn cục package (Package-level scope) hoặc khi cần suy luận kiểu tự động.</p>
+                <p>• <code class="text-yellow-300 font-mono font-bold">x := 10</code>: <strong>Short Variable Declaration</strong>. Cực kỳ phổ biến trong Go idiom. <em>Lưu ý nghiêm ngặt:</em> Cú pháp <code class="text-white font-mono">:=</code> chỉ được phép dùng <strong>bên trong hàm</strong>, cấm dùng ở phạm vi ngoài hàm (global package).</p>
+              </div>
+            </div>
+
+            <div class="bg-darkbg p-4 rounded-2xl border border-bordercol space-y-2 text-xs">
+              <h5 class="font-bold text-sm text-purple-400">⚡ 3. Cơ Chế "iota" - Máy Đếm Hằng Số Tự Động</h5>
+              <p class="text-slate-300 leading-relaxed">
+                Go không có từ khóa <code class="text-rose-400 font-mono">enum</code> riêng biệt như Java hay TypeScript. Thay vào đó, Go dùng <code class="text-gopher-400 font-mono">iota</code> trong khối <code class="text-white font-mono">const (...)</code>.
+              </p>
+              <div class="bg-slate-950 p-3 rounded-xl border border-bordercol font-mono text-slate-300">
+                const (<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;A = iota // 0<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;B&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 1 (tự động kế thừa biểu thức iota)<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;C&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 2<br>
+                )<br>
+                // iota tự động reset về 0 ở mỗi khối const độc lập!
+              </div>
+            </div>
+          </div>
+        `,
+        run: (params) => {
+          const selected = params.ex2_status || '200 - OK';
+          return [
+            `Khai báo biến:`,
+            `var a int -> a = 0 (Zero value)`,
+            `var b = 10 -> b = 10 (Type inference: int)`,
+            `c := 20 -> c = 20 (Short declaration: int)`,
+            ``,
+            `--- Tra cứu Enum HTTP Status ---`,
+            `HTTP Code được chọn: ${selected}`,
+            `Cơ chế iota giúp Go tạo các hằng số tuần tự một cách an toàn tại Compile-time.`
+          ];
+        }
+      },
+      {
+        id: 3,
+        cat: 'basic',
+        title: 'Máy tính số học 4 phép tính',
+        desc: 'Nhập 2 số float64 và toán tử (+, -, *, /) từ bàn phím qua fmt.Scanln, xử lý an toàn chia cho 0.',
+        inputs: [
+          { id: 'ex3_a', label: 'Số thứ nhất (a)', type: 'number', val: 15 },
+          { id: 'ex3_op', label: 'Toán tử (+, -, *, /)', type: 'select', options: ['+', '-', '*', '/'], val: '/' },
+          { id: 'ex3_b', label: 'Số thứ hai (b)', type: 'number', val: 3 }
+        ],
+        code: `package main
+
+import (
+    "fmt"
+)
+
+func main() {
+    var a, b float64
+    var op string
+
+    fmt.Print("Nhập số a, toán tử (+,-,*,/), số b: ")
+    // fmt.Scanln(&a, &op, &b)
+
+    a, op, b = 15.0, "/", 3.0
+
+    switch op {
+    case "+":
+        fmt.Printf("%.2f + %.2f = %.2f\\n", a, b, a+b)
+    case "-":
+        fmt.Printf("%.2f - %.2f = %.2f\\n", a, b, a-b)
+    case "*":
+        fmt.Printf("%.2f * %.2f = %.2f\\n", a, b, a*b)
+    case "/":
+        if b == 0 {
+            fmt.Println("Lỗi: Không thể chia cho 0!")
+        } else {
+            fmt.Printf("%.2f / %.2f = %.2f\\n", a, b, a/b)
+        }
+    default:
+        fmt.Println("Toán tử không hợp lệ!")
+    }
+}`,
+        lines: [
+          { line: '8-9', code: 'var a, b float64\nvar op string', exp: 'Khai báo 2 biến số thực độ chính xác kép 64-bit (`float64`) và chuỗi toán tử `op`.' },
+          { line: '12', code: 'fmt.Scanln(&a, &op, &b)', exp: 'Hàm đọc dữ liệu bàn phím. Dấu `&` là toán tử lấy địa chỉ con trỏ (Memory Address), cho phép hàm `Scanln` ghi trực tiếp dữ liệu vào ô nhớ của biến `a, op, b`.' },
+          { line: '16', code: 'switch op {', exp: 'Bắt đầu cấu trúc switch-case so khớp chuỗi toán tử `op`. Trong Go, mỗi case tự động break ngầm định, không lo bị trôi code.' },
+          { line: '23-27', code: 'case "/":\n    if b == 0 { ... } else { ... }', exp: 'Xử lý phép chia an toàn: bắt buộc kiểm tra `b == 0` để tránh lỗi chia cho 0.' },
+          { line: '29-30', code: 'default:\n    fmt.Println("Toán tử không hợp lệ!")', exp: 'Nhánh mặc định xử lý khi người dùng nhập toán tử khác 4 ký tự phép tính chuẩn.' }
+        ],
+        theory: `
+          <div class="space-y-4 font-sans">
+            <div class="border-l-4 border-gopher-500 pl-4 py-1 bg-gopher-500/10 rounded-r-xl">
+              <h4 class="font-bold text-white text-base">🎯 1. Con Trỏ Trong fmt.Scanln & Đọc Dữ Liệu</h4>
+              <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                Tại sao phải viết <code class="text-gopher-400 font-mono">fmt.Scanln(&amp;a, &amp;op, &amp;b)</code> có dấu <strong class="text-white font-mono">&amp;</strong>? Bởi vì Go là ngôn ngữ truyền tham trị (Pass-by-value). Muốn hàm <code class="text-white font-mono">Scanln</code> ghi được dữ liệu từ bàn phím vào đúng ô nhớ của biến ngoài hàm, ta bắt buộc phải truyền vào <strong>địa chỉ con trỏ (Memory Pointer)</strong> của biến đó.
+              </p>
+            </div>
+
+            <div class="bg-darkbg p-4 rounded-2xl border border-bordercol space-y-2 text-xs">
+              <h5 class="font-bold text-sm text-amber-400">⚠️️ 2. Sự Khác Biệt Giữa Phép Chia Số Nguyên vs Số Thực Với 0</h5>
+              <div class="space-y-2 leading-relaxed text-slate-300">
+                <p>• <strong>Số nguyên:</strong> Nếu thực hiện <code class="text-rose-400 font-mono">10 / 0</code> với kiểu int, chương trình Go sẽ bị <strong class="text-rose-400">Panic</strong> ngay lập tức: <code class="text-white bg-slate-900 px-1 rounded">panic: runtime error: integer divide by zero</code> và làm crash tiến trình!</p>
+                <p>• <strong>Số thực float64:</strong> Theo chuẩn IEEE-754, phép chia số thực cho 0 không gây panic mà sinh ra giá trị đặc biệt <code class="text-yellow-300 font-mono">+Inf</code> (dương vô cực) hoặc <code class="text-yellow-300 font-mono">-Inf</code>. Tuy nhiên trong nghiệp vụ ứng dụng, ta luôn phải chủ động kiểm tra <code class="text-white font-mono">if b == 0</code> để thông báo lỗi cho người dùng.</p>
+              </div>
+            </div>
+
+            <div class="bg-darkbg p-4 rounded-2xl border border-bordercol space-y-2 text-xs">
+              <h5 class="font-bold text-sm text-cyan-400">💡 3. Đặc Sản "Tự Động Break" Trong Switch-Case Của Go</h5>
+              <p class="text-slate-300 leading-relaxed">
+                Trong C/C++, Java hay JavaScript, nếu quên gõ lệnh <code class="text-rose-400 font-mono">break;</code> ở cuối mỗi case, code sẽ bị lỗi <em>fall-through</em> chạy tràn sang các case bên dưới. Trong Go, <strong>mỗi case tự động break ngầm định</strong>! Nếu bạn thực sự muốn rơi xuống case kế tiếp, bạn phải chủ động gõ từ khóa <code class="text-emerald-300 font-mono">fallthrough</code>.
+              </p>
+            </div>
+          </div>
+        `,
+        run: (params) => {
+          const a = parseFloat(params.ex3_a) || 0;
+          const b = parseFloat(params.ex3_b) || 0;
+          const op = params.ex3_op || '+';
+          if (op === '/' && b === 0) {
+            return [`Lỗi: Không thể chia cho 0 (Division by zero)!`];
+          }
+          let res = 0;
+          if (op === '+') res = a + b;
+          if (op === '-') res = a - b;
+          if (op === '*') res = a * b;
+          if (op === '/') res = a / b;
+          return [
+            `Phép tính: ${a} ${op} ${b}`,
+            `Kết quả: ${res.toFixed(4)}`
+          ];
+        }
+      },
+      {
+        id: 4,
+        cat: 'basic',
+        title: 'Chuyển đổi nhiệt độ (C, F, K)',
+        desc: 'Chuyển đổi giữa Celsius, Fahrenheit và Kelvin theo công thức tiêu chuẩn quốc tế.',
+        inputs: [
+          { id: 'ex4_c', label: 'Nhiệt độ Celsius (°C)', type: 'number', val: 37 }
+        ],
+        code: `package main
+
+import "fmt"
+
+func main() {
+    var c float64 = 37.0 // Thân nhiệt cơ thể
+
+    f := (c * 9.0 / 5.0) + 32.0
+    k := c + 273.15
+
+    fmt.Printf("Celsius   : %.2f °C\\n", c)
+    fmt.Printf("Fahrenheit: %.2f °F\\n", f)
+    fmt.Printf("Kelvin    : %.2f K\\n", k)
+}`,
+        lines: [
+          { line: '6', code: 'var c float64 = 37.0', exp: 'Khởi tạo nhiệt độ Celsius ban đầu dưới dạng số thực `float64`.' },
+          { line: '8', code: 'f := (c * 9.0 / 5.0) + 32.0', exp: 'Công thức chuyển đổi sang Fahrenheit. **Cực kỳ quan trọng:** phải viết `9.0 / 5.0` (số thực); nếu viết `9 / 5` phép chia nguyên sẽ lấy phần nguyên = 1 làm sai toàn bộ kết quả!' },
+          { line: '9', code: 'k := c + 273.15', exp: 'Cộng hằng số độ không tuyệt đối 273.15 để quy đổi sang thang nhiệt Kelvin.' },
+          { line: '11-13', code: 'fmt.Printf("... %.2f ...", ...)', exp: 'Sử dụng định dạng `%.2f` để làm tròn và giữ lại đúng 2 chữ số thập phân sau dấu phẩy.' }
+        ],
+        theory: `
+          <div class="space-y-4 font-sans">
+            <div class="border-l-4 border-gopher-500 pl-4 py-1 bg-gopher-500/10 rounded-r-xl">
+              <h4 class="font-bold text-white text-base">🎯 1. Công Thức Quy Đổi Chuẩn Quốc Tế</h4>
+              <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                Mối quan hệ giữa 3 thang đo nhiệt độ: <code class="text-emerald-300 font-mono">°F = (°C × 9/5) + 32</code> và <code class="text-emerald-300 font-mono">K = °C + 273.15</code>. Độ không tuyệt đối tương ứng với 0 Kelvin hay -273.15 °C.
+              </p>
+            </div>
+
+            <div class="bg-darkbg p-4 rounded-2xl border border-red-500/30 space-y-2 text-xs">
+              <h5 class="font-bold text-sm text-red-400">⚠️️ 2. Cạm Bẫy Phép Chia Số Nguyên (Integer Truncation) Trong Go</h5>
+              <p class="text-slate-300 leading-relaxed">
+                Rất nhiều lập trình viên mới viết công thức: <code class="text-rose-400 font-mono">f := (c * 9 / 5) + 32</code>.
+              </p>
+              <div class="bg-slate-950 p-3 rounded-xl border border-bordercol font-mono text-slate-300 space-y-1">
+                <p>Nếu viết <code>9 / 5</code>: Vì 9 và 5 là số nguyên nguyên văn (Untyped Int Constant), phép chia nguyên sẽ lấy phần nguyên = <strong class="text-rose-400">1</strong> (mất đứt 0.8)!</p>
+                <p>-> Kết quả nhiệt độ sẽ sai lệch hoàn toàn!</p>
+                <p class="text-emerald-400">-> BẮT BUỘC viết: <code class="text-white">9.0 / 5.0</code> hoặc <code class="text-white">float64(9)/5.0</code> để Go kích hoạt phép chia số thực chuẩn IEEE-754.</p>
+              </div>
+            </div>
+
+            <div class="bg-darkbg p-4 rounded-2xl border border-bordercol space-y-2 text-xs">
+              <h5 class="font-bold text-sm text-cyan-400">💡 3. Go Không Tự Động Ép Kiểu (No Implicit Type Conversion)</h5>
+              <p class="text-slate-300 leading-relaxed">
+                Khác với C hay JavaScript cho phép cộng lộn xộn giữa int32, int64 và float, trong Go bạn <strong>không thể</strong> thực hiện phép toán giữa 2 biến khác kiểu (ví dụ: <code class="text-rose-300 font-mono">var a int = 5; var b float64 = 2.5; a + b</code> sẽ báo lỗi compile ngay!). Tính nghiêm ngặt này loại bỏ triệt để 90% lỗi sai số làm tròn ngầm định trong phần mềm tài chính.
+              </p>
+            </div>
+          </div>
+        `,
+        run: (params) => {
+          const c = parseFloat(params.ex4_c) || 0;
+          const f = (c * 9 / 5) + 32;
+          const k = c + 273.15;
+          return [
+            `Celsius    (°C) : ${c.toFixed(2)} °C`,
+            `Fahrenheit (°F) : ${f.toFixed(2)} °F`,
+            `Kelvin     (K)  : ${k.toFixed(2)} K`
+          ];
+        }
+      },
+      {
+        id: 5,
+        cat: 'control',
+        title: 'Kiểm tra Chẵn/Lẻ & Âm/Dương',
+        desc: 'Sử dụng cú pháp if initialization; condition độc đáo của Go (ví dụ: if n := num % 2; n == 0).',
+        inputs: [
+          { id: 'ex5_num', label: 'Nhập số nguyên cần kiểm tra', type: 'number', val: -8 }
+        ],
+        code: `package main
+
+import "fmt"
+
+func main() {
+    num := -8
+
+    // Cú pháp 'if initialization; condition' đặc sản của Go
+    if rem := num % 2; rem == 0 {
+        fmt.Printf("%d là số Chẵn\\n", num)
+    } else {
+        fmt.Printf("%d là số Lẻ\\n", num)
+    }
+
+    // Biến 'rem' ở trên đã tự động hết vòng đời (out of scope), không gây ô nhiễm biến ngoài!
+
+    if num > 0 {
+        fmt.Printf("%d là số Dương\\n", num)
+    } else if num < 0 {
+        fmt.Printf("%d là số Âm\\n", num)
+    } else {
+        fmt.Println("Số 0 (Không âm cũng không dương)")
+    }
+}`,
+        lines: [
+          { line: '6', code: 'num := -8', exp: 'Khởi tạo số nguyên `num` với giá trị âm -8 để thử nghiệm cả tính chẵn lẻ lẫn dấu âm.' },
+          { line: '9', code: 'if rem := num % 2; rem == 0 {', exp: 'Cú pháp đặc sản Go `if initialization; condition`: Khởi tạo biến `rem` bằng phép chia lấy dư `%` trước dấu chấm phẩy, sau đó kiểm tra ngay điều kiện `rem == 0`.' },
+          { line: '10-13', code: '} else {\n    fmt.Printf("%d là số Lẻ\\n", num)\n}', exp: 'Nhánh else. Biến `rem` được cô lập (scoped) hoàn toàn: nó chỉ tồn tại bên trong khối if-else này và tự hủy ngay sau dấu đóng ngoặc `}`, không làm rác biến ngoài.' },
+          { line: '17-23', code: 'if num > 0 { ... } else if num < 0 { ... } else { ... }', exp: 'Cấu trúc rẽ nhánh 3 trường hợp để phân loại số dương, số âm và điểm mốc số 0.' }
+        ],
+        theory: `
+          <div class="space-y-4 font-sans">
+            <div class="border-l-4 border-gopher-500 pl-4 py-1 bg-gopher-500/10 rounded-r-xl">
+              <h4 class="font-bold text-white text-base">🎯 1. Cú Pháp Đặc Sản: "if initialization; condition"</h4>
+              <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                Go cho phép bạn thực thi một câu lệnh khởi tạo biến trước dấu chấm phẩy <code class="text-white font-mono">;</code> rồi mới kiểm tra biểu thức điều kiện boolean. Cú pháp này được thiết kế để phục vụ việc kiểm tra lỗi: <code class="text-gopher-400 font-mono">if err := doSomething(); err != nil { ... }</code>.
+              </p>
+            </div>
+
+            <div class="bg-darkbg p-4 rounded-2xl border border-bordercol space-y-2 text-xs">
+              <h5 class="font-bold text-sm text-emerald-400">🔒 2. Scope Confinement: Cô Lập Phạm Vi Biến</h5>
+              <p class="text-slate-300 leading-relaxed">
+                Biến <code class="text-emerald-300 font-mono">rem</code> được khai báo trong <code class="text-white font-mono">if rem := num % 2; ...</code> chỉ tồn tại duy nhất bên trong thân của khối <code class="text-white font-mono">if</code> và <code class="text-white font-mono">else</code> tương ứng. Ngay sau dấu đóng ngoặc nhọn <code class="text-white font-mono">}</code>, biến này lập tức bị hủy bỏ (out of scope).
+              </p>
+              <div class="p-3 bg-slate-950 rounded-xl border border-bordercol text-slate-400 font-mono">
+                fmt.Println(rem) // Lỗi biên dịch: undefined: rem (Biến ngoài không thể chạm tới!)
+              </div>
+            </div>
+
+            <div class="bg-darkbg p-4 rounded-2xl border border-bordercol space-y-2 text-xs">
+              <h5 class="font-bold text-sm text-cyan-400">⚡ 3. Toán Tử Modulo Với Số Âm Trong Go</h5>
+              <p class="text-slate-300 leading-relaxed">
+                Cần đặc biệt lưu ý: Trong Go, dấu của phép chia lấy dư <code class="text-white font-mono">%</code> sẽ <strong>ăn theo dấu của số bị chia</strong>:
+                <br>• <code class="text-gopher-300 font-mono">-7 % 2 = -1</code> (chứ không phải 1 như trong toán học thuần túy hay Python).
+                <br>Vì vậy, điều kiện kiểm tra số chẵn luôn an toàn nhất là: <code class="text-emerald-300 font-mono">num % 2 == 0</code> (thay vì viết <code class="text-rose-300 font-mono">num % 2 == 1</code> vì số lẻ âm sẽ cho kết quả -1).
+              </p>
+            </div>
+          </div>
+        `,
+        run: (params) => {
+          const num = parseInt(params.ex5_num) || 0;
+          const isEven = num % 2 === 0;
+          let signStr = "Số 0";
+          if (num > 0) signStr = "Số Dương";
+          if (num < 0) signStr = "Số Âm";
+
+          return [
+            `Số đã nhập: ${num}`,
+            `Tính chẵn lẻ: ${isEven ? 'Số CHẴN' : 'Số LẺ'} (dư: ${num % 2})`,
+            `Dấu: ${signStr}`,
+            `-> Biến rem khai báo trong if sẽ bị hủy ngay khi kết thúc khối if-else.`
+          ];
+        }
+      },
+      {
+        id: 6,
+        cat: 'control',
+        title: 'Tìm Max/Min trong 3 số',
+        desc: 'Nhập vào 3 số thực, tìm giá trị lớn nhất và nhỏ nhất mà không dùng bất kỳ thư viện ngoài nào.',
+        inputs: [
+          { id: 'ex6_a', label: 'Số thứ nhất (a)', type: 'number', val: 14.5 },
+          { id: 'ex6_b', label: 'Số thứ hai (b)', type: 'number', val: 82.1 },
+          { id: 'ex6_c', label: 'Số thứ ba (c)', type: 'number', val: 45.0 }
+        ],
+        code: `package main
+
+import "fmt"
+
+func main() {
+    a, b, c := 14.5, 82.1, 45.0
+
+    maxVal := a
+    if b > maxVal {
+        maxVal = b
+    }
+    if c > maxVal {
+        maxVal = c
+    }
+
+    minVal := a
+    if b < minVal {
+        minVal = b
+    }
+    if c < minVal {
+        minVal = c
+    }
+
+    fmt.Printf("Dãy số: %.2f, %.2f, %.2f\\n", a, b, c)
+    fmt.Printf("Giá trị Lớn nhất (Max): %.2f\\n", maxVal)
+    fmt.Printf("Giá trị Nhỏ nhất (Min): %.2f\\n", minVal)
+}`,
+        lines: [
+          { line: '6', code: 'a, b, c := 14.5, 82.1, 45.0', exp: 'Cú pháp gán đa biến đồng thời (Multiple Assignment), khởi tạo 3 biến kiểu `float64` trên 1 dòng duy nhất.' },
+          { line: '8', code: 'maxVal := a', exp: 'Chiến thuật Greedy: Giả định ban đầu số đầu tiên `a` là số lớn nhất.' },
+          { line: '9-14', code: 'if b > maxVal { maxVal = b }\nif c > maxVal { maxVal = c }', exp: 'Lần lượt so sánh với `b` và `c`. Nếu phát hiện số nào lớn hơn giả định hiện tại thì lập tức cập nhật `maxVal`.' },
+          { line: '16-22', code: 'minVal := a\nif b < minVal { minVal = b } ...', exp: 'Thực hiện tư duy tương tự để tìm giá trị nhỏ nhất `minVal`.' }
+        ],
+        theory: `
+          <div class="space-y-4 font-sans">
+            <div class="border-l-4 border-gopher-500 pl-4 py-1 bg-gopher-500/10 rounded-r-xl">
+              <h4 class="font-bold text-white text-base">🎯 1. Chiến Thuật So Sánh Tuần Tự (Greedy Selection)</h4>
+              <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                Ta giả định ban đầu <code class="text-white font-mono">maxVal = a</code>. Sau đó duyệt tuần tự qua các phần tử còn lại, nếu gặp phần tử nào lớn hơn giả định hiện tại thì lập tức cập nhật <code class="text-white font-mono">maxVal</code>. Đây là thuật toán cơ bản tối ưu nhất với số lượng phần tử cố định nhỏ ($O(1)$ phép so sánh).
+              </p>
+            </div>
+
+            <div class="bg-darkbg p-4 rounded-2xl border border-bordercol space-y-2 text-xs">
+              <h5 class="font-bold text-sm text-cyan-400">🔍 2. Tại Sao Không Dùng math.Max Cho Số Nguyên Trong Go?</h5>
+              <p class="text-slate-300 leading-relaxed">
+                Trước phiên bản Go 1.21, thư viện chuẩn <code class="text-white font-mono">math.Max(x, y float64)</code> chỉ hỗ trợ duy nhất kiểu <code class="text-emerald-300 font-mono">float64</code>. Nếu muốn tìm max giữa 2 số int, bạn buộc phải ép kiểu: <code class="text-rose-400 font-mono">int(math.Max(float64(a), float64(b)))</code> — vừa cồng kềnh, vừa có nguy cơ sai lệch số với các số int64 cực lớn!
+              </p>
+              <div class="p-3 bg-slate-950 rounded-xl border border-bordercol text-emerald-400 font-mono">
+                // Từ Go 1.21+, Go đã bổ sung sẵn 2 built-in function toàn cục:<br>
+                val := max(a, b, c) // Hỗ trợ mọi kiểu số và số lượng tham số tùy ý!<br>
+                val := min(a, b, c)
+              </div>
+            </div>
+
+            <div class="bg-slate-950 p-3 rounded-xl border border-bordercol flex justify-between items-center text-xs font-mono">
+              <span class="text-slate-400">Số phép so sánh: <strong class="text-emerald-400">4 phép tính</strong></span>
+              <span class="text-slate-400">Độ phức tạp: <strong class="text-emerald-400">O(1)</strong></span>
+              <span class="text-slate-400">Bộ nhớ phụ: <strong class="text-emerald-400">O(1)</strong></span>
+            </div>
+          </div>
+        `,
+        run: (params) => {
+          const a = parseFloat(params.ex6_a) || 0;
+          const b = parseFloat(params.ex6_b) || 0;
+          const c = parseFloat(params.ex6_c) || 0;
+          const maxVal = Math.max(a, b, c);
+          const minVal = Math.min(a, b, c);
+          return [
+            `Danh sách 3 số: [${a}, ${b}, ${c}]`,
+            `Giá trị LỚN NHẤT (Max): ${maxVal}`,
+            `Giá trị NHỎ NHẤT (Min): ${minVal}`
+          ];
+        }
+      },
+      {
+        id: 7,
+        cat: 'loop',
+        title: 'Bảng cửu chương (2 đến 9)',
+        desc: 'Dùng 2 vòng lặp for lồng nhau để in bảng cửu chương từ 2 đến 9 thành từng cột thẳng hàng chuẩn mực.',
+        inputs: [
+          { id: 'ex7_from', label: 'Bắt đầu từ bảng số', type: 'number', val: 2 },
+          { id: 'ex7_to', label: 'Đến bảng số', type: 'number', val: 5 }
+        ],
+        code: `package main
+
+import "fmt"
+
+func main() {
+    // In tiêu đề các cột
+    for i := 2; i <= 9; i++ {
+        fmt.Printf("=== Bảng %d ===\\t", i)
+    }
+    fmt.Println()
+
+    // 2 vòng lặp lồng nhau
+    for row := 1; row <= 10; row++ {
+        for col := 2; col <= 9; col++ {
+            // %2d để căn lề chữ số thẳng hàng
+            fmt.Printf("%d x %2d = %2d\\t", col, row, col*row)
+        }
+        fmt.Println()
+    }
+}`,
+        lines: [
+          { line: '7-10', code: 'for i := 2; i <= 9; i++ {\n    fmt.Printf("=== Bảng %d ===\\t", i)\n}', exp: 'Vòng lặp in tiêu đề đầu mỗi cột. Ký tự `\\t` (Tab) tạo bước nhảy đều đặn 8 khoảng trắng sang cột tiếp theo.' },
+          { line: '13', code: 'for row := 1; row <= 10; row++ {', exp: 'Vòng lặp ngoài duyệt qua các hàng số (thừa số nhân từ 1 đến 10).' },
+          { line: '14', code: 'for col := 2; col <= 9; col++ {', exp: 'Vòng lặp trong duyệt qua các cột bảng cửu chương (từ bảng 2 đến bảng 9).' },
+          { line: '16', code: 'fmt.Printf("%d x %2d = %2d\\t", col, row, col*row)', exp: 'In từng phép tính. `%2d` ép chữ số luôn chiếm đúng 2 khoảng trống, đảm bảo số 4 và số 16 đều thẳng mép nhau hoàn hảo.' },
+          { line: '18', code: 'fmt.Println()', exp: 'Xuống dòng khi in xong toàn bộ các cột của hàng hiện tại.' }
+        ],
+        theory: `
+          <div class="space-y-4 font-sans">
+            <div class="border-l-4 border-gopher-500 pl-4 py-1 bg-gopher-500/10 rounded-r-xl">
+              <h4 class="font-bold text-white text-base">🎯 1. Triết Lý Tối Giản: "for" Là Từ Khóa Vòng Lặp Duy Nhất</h4>
+              <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                Để giữ ngôn ngữ luôn trong sáng và dễ đọc, các nhà thiết kế Go đã <strong>loại bỏ hoàn toàn</strong> các từ khóa <code class="text-rose-400 font-mono">while</code> và <code class="text-rose-400 font-mono">do-while</code>. Mọi loại vòng lặp trong Go đều diễn tả qua từ khóa <code class="text-gopher-400 font-mono">for</code>:
+                <br>• Cổ điển 3 thành phần: <code class="text-white font-mono">for i := 0; i &lt; n; i++ { ... }</code>
+                <br>• Dạng While: <code class="text-white font-mono">for condition { ... }</code>
+                <br>• Dạng vô hạn: <code class="text-white font-mono">for { ... }</code>
+              </p>
+            </div>
+
+            <div class="bg-darkbg p-4 rounded-2xl border border-bordercol space-y-2 text-xs">
+              <h5 class="font-bold text-sm text-yellow-400">📐 2. Nghệ Thuật Căn Cột Thẳng Hàng Trên Terminal</h5>
+              <div class="space-y-1.5 text-slate-300 leading-relaxed">
+                <p>• Ký tự <code class="text-cyan-300 font-mono">%2d</code>: Ép số in ra luôn chiếm đủ 2 khoảng trắng (nếu số có 1 chữ số, tự động bù thêm khoảng trắng ở đầu). Nhờ đó số 4 và số 16 vẫn căn đều nhau hoàn hảo.</p>
+                <p>• Ký tự <code class="text-cyan-300 font-mono">\\t</code> (Tab character): Di chuyển con trỏ terminal sang điểm dừng tab tiếp theo (mỗi tab thường cách nhau 8 khoảng trắng), biến output thành dạng lưới ma trận (Grid matrix).</p>
+              </div>
+            </div>
+
+            <div class="bg-slate-950 p-3 rounded-xl border border-bordercol flex justify-between items-center text-xs font-mono">
+              <span class="text-slate-400">Độ phức tạp: Time: <strong class="text-emerald-400">O(Rows × Cols)</strong></span>
+              <span class="text-slate-400">Space: <strong class="text-emerald-400">O(1)</strong></span>
+            </div>
+          </div>
+        `,
+        run: (params) => {
+          let from = parseInt(params.ex7_from) || 2;
+          let to = parseInt(params.ex7_to) || 5;
+          if (from < 1) from = 1;
+          if (to > 9) to = 9;
+          if (from > to) { const temp = from; from = to; to = temp; }
+
+          let header = "";
+          for (let i = from; i <= to; i++) header += `[Bảng ${i}]\t`;
+          const lines = [header];
+
+          for (let row = 1; row <= 10; row++) {
+            let rowStr = "";
+            for (let col = from; col <= to; col++) {
+              const res = (col * row).toString().padStart(2, ' ');
+              const rStr = row.toString().padStart(2, ' ');
+              rowStr += `${col}x${rStr}=${res}\t`;
+            }
+            lines.push(rowStr);
+          }
+          return lines;
+        }
+      },
+      {
+        id: 8,
+        cat: 'loop',
+        title: 'Tính giai thừa (n!) & Chống tràn số',
+        desc: 'Viết hàm tính giai thừa theo 2 cách (vòng lặp & đệ quy), kiểm tra giới hạn tràn số với kiểu uint64.',
+        inputs: [
+          { id: 'ex8_n', label: 'Nhập số n (0 đến 25)', type: 'number', val: 10 }
+        ],
+        code: `package main
+
+import "fmt"
+
+// Cách 1: Vòng lặp tuần tự (Iterative) - An toàn stack
+func factorialIterative(n uint64) uint64 {
+    var result uint64 = 1
+    for i := uint64(2); i <= n; i++ {
+        result *= i
+    }
+    return result
+}
+
+// Cách 2: Đệ quy (Recursive)
+func factorialRecursive(n uint64) uint64 {
+    if n <= 1 {
+        return 1
+    }
+    return n * factorialRecursive(n-1)
+}
+
+func main() {
+    var n uint64 = 10
+    if n > 20 {
+        fmt.Println("Cảnh báo: n > 20 sẽ làm tràn số kiểu uint64 (64-bit max ~1.84e19)!")
+    }
+    fmt.Printf("%d! (Vòng lặp) = %d\\n", n, factorialIterative(n))
+    fmt.Printf("%d! (Đệ quy)   = %d\\n", n, factorialRecursive(n))
+}`,
+        lines: [
+          { line: '6-12', code: 'func factorialIterative(n uint64) uint64 {\n    var result uint64 = 1\n    for i := uint64(2); i <= n; i++ {\n        result *= i\n    }\n    return result\n}', exp: 'Hàm tính giai thừa lặp tuần tự: Dùng kiểu nguyên không dấu 64-bit `uint64`. Tối ưu tuyệt đối bộ nhớ $O(1)$ stack vì không tạo thêm stack frame nào.' },
+          { line: '15-20', code: 'func factorialRecursive(n uint64) uint64 {\n    if n <= 1 { return 1 }\n    return n * factorialRecursive(n-1)\n}', exp: 'Hàm đệ quy: Điều kiện dừng cơ sở `if n <= 1 return 1`. Mỗi lần gọi đệ quy tạo 1 frame trên Call Stack, tiêu tốn $O(n)$ bộ nhớ.' },
+          { line: '24-26', code: 'if n > 20 {\n    fmt.Println("Cảnh báo: n > 20 sẽ làm tràn số...")\n}', exp: 'Kiểm tra biên an toàn: Vì $20! \\approx 2.43 \\times 10^{18}$ là giá trị lớn nhất chứa vừa trong `uint64`. Với $n > 20$, số sẽ bị tràn âm thầm (Wrap-around).' }
+        ],
+        theory: `
+          <div class="space-y-4 font-sans">
+            <div class="border-l-4 border-gopher-500 pl-4 py-1 bg-gopher-500/10 rounded-r-xl">
+              <h4 class="font-bold text-white text-base">🎯 1. So Sánh Đệ Quy vs Vòng Lặp Tuần Tự</h4>
+              <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                Mặc dù công thức đệ quy <code class="text-emerald-300 font-mono">n * factorial(n-1)</code> rất đẹp về mặt toán học, nhưng mỗi lần gọi hàm đệ quy trong máy tính sẽ tiêu tốn thêm một <strong>Stack Frame</strong> trên Call Stack. Với $N$ lớn, đệ quy có nguy cơ gây tràn bộ nhớ stack (Stack Overflow). Do đó trong Go sản xuất, vòng lặp tuần tự luôn được ưu tiên vì độ phức tạp bộ nhớ chỉ là $O(1)$.
+              </p>
+            </div>
+
+            <div class="bg-darkbg p-4 rounded-2xl border border-red-500/30 space-y-2 text-xs">
+              <h5 class="font-bold text-sm text-red-400">💥 2. Hiện Tượng Tràn Số Âm Thầm (Silent Integer Overflow)</h5>
+              <p class="text-slate-300 leading-relaxed">
+                Kiểu <code class="text-gopher-400 font-mono">uint64</code> (64-bit unsigned integer) có giá trị cực đại là $2^{64} - 1 \approx 18.4 \times 10^{18}$.
+              </p>
+              <div class="bg-slate-950 p-3 rounded-xl border border-bordercol font-mono text-slate-300 space-y-1">
+                <p>• 20! = 2,432,902,008,176,640,000 (Vừa vặn lưu được trong uint64).</p>
+                <p>• 21! ≈ 51,090,942,171,709,440,000 (Vượt quá $2^{64}-1$).</p>
+                <p class="text-rose-400">-> Trình biên dịch Go KHÔNG BÁO LỖI! Số bị quay vòng (wrap-around) thành một số vô nghĩa sai lệch hoàn toàn!</p>
+              </div>
+            </div>
+
+            <div class="bg-darkbg p-4 rounded-2xl border border-bordercol space-y-2 text-xs">
+              <h5 class="font-bold text-sm text-cyan-400">💡 3. Giải Pháp Khi Cần Tính n! Siêu Lớn</h5>
+              <p class="text-slate-300 leading-relaxed">
+                Nếu cần tính giai thừa từ 21 trở lên hoặc mã hóa mật mã học RSA, bạn phải sử dụng package <code class="text-gopher-300 font-mono">math/big</code> với kiểu đối tượng <code class="text-white font-mono">big.Int</code> có thể lưu trữ số nguyên có độ dài hàng triệu chữ số không giới hạn.
+              </p>
+            </div>
+          </div>
+        `,
+        run: (params) => {
+          const n = parseInt(params.ex8_n) || 0;
+          if (n < 0) return [`Lỗi: Giai thừa không xác định cho số âm!`];
+          if (n > 20) {
+            return [
+              `Giá trị n = ${n}`,
+              `⚠️ CẢNH BÁO TRÀN SỐ UINT64: 20! là giới hạn lớn nhất kiểu 64-bit lưu được.`,
+              `Ở n=${n}, phép tính sẽ vượt quá 2^64-1 (~1.84 * 10^19). Cần dùng package "math/big" trong Go!`
+            ];
+          }
+          let res = 1n;
+          for (let i = 2n; i <= BigInt(n); i++) res *= i;
+          return [
+            `Tính ${n}! :`,
+            `Cách 1 (Vòng lặp) : ${res.toString()}`,
+            `Cách 2 (Đệ quy)   : ${res.toString()}`,
+            `Số chữ số: ${res.toString().length}`
+          ];
+        }
+      },
+      {
+        id: 9,
+        cat: 'loop',
+        title: 'Dãy số Fibonacci (N số đầu & F_n)',
+        desc: 'In N số đầu tiên của dãy Fibonacci và trả về giá trị số Fibonacci thứ N với độ phức tạp O(N).',
+        inputs: [
+          { id: 'ex9_n', label: 'Số lượng phần tử N (1 đến 50)', type: 'number', val: 12 }
+        ],
+        code: `package main
+
+import "fmt"
+
+func fibonacci(n int) []uint64 {
+    if n <= 0 {
+        return []uint64{}
+    }
+    fib := make([]uint64, n)
+    fib[0] = 0
+    if n > 1 {
+        fib[1] = 1
+        for i := 2; i < n; i++ {
+            fib[i] = fib[i-1] + fib[i-2]
+        }
+    }
+    return fib
+}
+
+func main() {
+    n := 12
+    series := fibonacci(n)
+    fmt.Printf("%d số Fibonacci đầu tiên: %v\\n", n, series)
+    fmt.Printf("Số Fibonacci thứ %d là: %d\\n", n, series[n-1])
+}`,
+        lines: [
+          { line: '5-8', code: 'func fibonacci(n int) []uint64 {\n    if n <= 0 { return []uint64{} }', exp: 'Khai báo hàm trả về một Slice các số `uint64`. Xử lý trường hợp biên $n \\le 0$ trả về lát cắt rỗng.' },
+          { line: '9', code: 'fib := make([]uint64, n)', exp: 'Hàm `make` cấp phát vùng nhớ liên tục cho lát cắt (slice) gồm đúng `n` phần tử, tránh việc mảng bị resize nhiều lần.' },
+          { line: '10-12', code: 'fib[0] = 0\nif n > 1 { fib[1] = 1 }', exp: 'Khởi tạo 2 giá trị cơ sở của dãy Fibonacci: $F_0 = 0$ và $F_1 = 1$.' },
+          { line: '13-15', code: 'for i := 2; i < n; i++ {\n    fib[i] = fib[i-1] + fib[i-2]\n}', exp: 'Quy hoạch động từ dưới lên (Bottom-up Memoization) với độ phức tạp $O(n)$, cộng 2 phần tử liền trước để sinh phần tử mới.' },
+          { line: '23', code: 'fmt.Printf("... %d\\n", n, series[n-1])', exp: 'Lấy phần tử thứ `n` thông qua chỉ mục `series[n-1]` (vì index trong Go đếm từ 0).' }
+        ],
+        theory: `
+          <div class="space-y-4 font-sans">
+            <div class="border-l-4 border-gopher-500 pl-4 py-1 bg-gopher-500/10 rounded-r-xl">
+              <h4 class="font-bold text-white text-base">🎯 1. Công Thức Truy Hồi & Cảnh Báo Phỏng Vấn Tuyển Dụng</h4>
+              <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                Quy luật Fibonacci: $F_0 = 0, F_1 = 1, F_n = F_{n-1} + F_{n-2}$.
+                <br><strong>Tuyệt đối không dùng đệ quy ngây thơ:</strong> <code class="text-rose-400 font-mono">return fib(n-1) + fib(n-2)</code>. Cây đệ quy sẽ tính trùng lặp hàng triệu lần, đẩy độ phức tạp lên cấp số mũ <strong class="text-rose-400">O(2^n)</strong>. Khi $n = 50$, máy tính sẽ đơ hoàn toàn!
+              </p>
+            </div>
+
+            <div class="bg-darkbg p-4 rounded-2xl border border-bordercol space-y-2 text-xs">
+              <h5 class="font-bold text-sm text-cyan-400">🔍 2. Slice Trong Go & Hàm "make"</h5>
+              <p class="text-slate-300 leading-relaxed">
+                Lệnh <code class="text-gopher-300 font-mono">fib := make([]uint64, n)</code> cấp phát một lát cắt (Slice) động gồm $n$ phần tử kiểu <code class="text-white font-mono">uint64</code> liên tục trong bộ nhớ. Mảng động này đóng vai trò như một bộ nhớ tạm (Memoization / Dynamic Programming), giúp ta tính toán tuần tự từ dưới lên (Bottom-up) với độ phức tạp tuyến tính <strong class="text-emerald-400">O(n)</strong>.
+              </p>
+            </div>
+
+            <div class="bg-darkbg p-4 rounded-2xl border border-bordercol space-y-2 text-xs">
+              <h5 class="font-bold text-sm text-emerald-400">💡 3. Tối Ưu Bộ Nhớ O(1) Bằng 2 Biến Tạm</h5>
+              <p class="text-slate-300 leading-relaxed">
+                Nếu bài toán chỉ yêu cầu tìm duy nhất số Fibonacci thứ $n$ mà không cần in cả mảng, ta chỉ cần duy trì 2 biến: <code class="text-white font-mono">prev, curr = 0, 1</code> và lặp <code class="text-white font-mono">prev, curr = curr, prev + curr</code>. Độ phức tạp không gian giảm về tuyệt đối <strong class="text-emerald-400">O(1)</strong>!
+              </p>
+            </div>
+          </div>
+        `,
+        run: (params) => {
+          const n = parseInt(params.ex9_n) || 1;
+          if (n <= 0) return [`Vui lòng nhập N > 0`];
+          const fib = [0n];
+          if (n > 1) fib.push(1n);
+          for (let i = 2; i < n; i++) {
+            fib.push(fib[i-1] + fib[i-2]);
+          }
+          return [
+            `${n} số Fibonacci đầu tiên:`,
+            `[ ${fib.map(x => x.toString()).join(', ')} ]`,
+            ``,
+            `Giá trị phần tử thứ ${n} (F_${n-1}) = ${fib[n-1].toString()}`
+          ];
+        }
+      },
+      {
+        id: 10,
+        cat: 'math',
+        title: 'Kiểm tra Số nguyên tố (Tối ưu căn bậc 2)',
+        desc: 'Viết hàm kiểm tra một số nguyên n có phải số nguyên tố không với độ phức tạp tối ưu O(√n).',
+        inputs: [
+          { id: 'ex10_n', label: 'Nhập số n cần kiểm tra', type: 'number', val: 997 }
+        ],
+        code: `package main
+
+import (
+    "fmt"
+    "math"
+)
+
+func isPrime(n int) bool {
+    if n <= 1 {
+        return false
+    }
+    if n == 2 || n == 3 {
+        return true
+    }
+    if n%2 == 0 || n%3 == 0 {
+        return false
+    }
+
+    // Chỉ cần duyệt các ước tới căn bậc hai của n: i * i <= n
+    limit := int(math.Sqrt(float64(n)))
+    for i := 5; i <= limit; i += 6 {
+        if n%i == 0 || n%(i+2) == 0 {
+            return false
+        }
+    }
+    return true
+}
+
+func main() {
+    num := 997
+    if isPrime(num) {
+        fmt.Printf("%d LÀ số nguyên tố!\\n", num)
+    } else {
+        fmt.Printf("%d KHÔNG PHẢI số nguyên tố.\\n", num)
+    }
+}`,
+        lines: [
+          { line: '9-17', code: 'if n <= 1 { return false }\nif n == 2 || n == 3 { return true }\nif n%2 == 0 || n%3 == 0 { return false }', exp: 'Loại trừ nhanh: $n \\le 1$ không phải SNT; 2 và 3 là SNT; các số chẵn hoặc chia hết cho 3 loại bỏ ngay lập tức.' },
+          { line: '20', code: 'limit := int(math.Sqrt(float64(n)))', exp: 'Tính căn bậc hai của `n` làm mốc chặn trên; ép kiểu `float64(n)` vì hàm `math.Sqrt` chỉ nhận số thực.' },
+          { line: '21-25', code: 'for i := 5; i <= limit; i += 6 {\n    if n%i == 0 || n%(i+2) == 0 { return false }\n}', exp: 'Thuật toán bước nhảy $6k \\pm 1$: kiểm tra đồng thời cặp ước `i` và `i+2`, nhảy `i += 6`. Giảm 2/3 số phép tính so với lặp kiểm tra từng số.' },
+          { line: '26', code: 'return true', exp: 'Nếu không chia hết cho bất kỳ số nào tới $\\sqrt{n}$, kết luận chắc chắn là số nguyên tố.' }
+        ],
+        theory: `
+          <div class="space-y-4 font-sans">
+            <div class="border-l-4 border-gopher-500 pl-4 py-1 bg-gopher-500/10 rounded-r-xl">
+              <h4 class="font-bold text-white text-base">🎯 1. Chứng Minh Toán Học: Tại Sao Chỉ Cần Lặp Đến √n?</h4>
+              <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                Giả sử $n$ là hợp số (Composite number), ta luôn có thể phân tích: $n = a \times b$. Nếu cả hai thừa số đều lớn hơn $\sqrt{n}$ ($a > \sqrt{n}$ và $b > \sqrt{n}$), thì tích của chúng sẽ là $a \times b > \sqrt{n} \times \sqrt{n} = n$ (vô lý!). Do đó, <strong>bắt buộc phải tồn tại ít nhất một thừa số nhỏ hơn hoặc bằng $\sqrt{n}$</strong>. Nếu trong khoảng $[2, \sqrt{n}]$ không có số nào chia hết cho $n$, thì sau đó chắc chắn cũng không có!
+              </p>
+            </div>
+
+            <div class="bg-darkbg p-4 rounded-2xl border border-bordercol space-y-2 text-xs">
+              <h5 class="font-bold text-sm text-cyan-400">⚡ 2. Tối Ưu Bước Nhảy "6k ± 1" Siêu Tốc</h5>
+              <p class="text-slate-300 leading-relaxed">
+                Mọi số nguyên tố lớn hơn 3 đều có dạng $6k \pm 1$ (tức $6k - 1$ hoặc $6k + 1$). Sau khi đã kiểm tra và loại trừ toàn bộ bội số của 2 và 3, vòng lặp chỉ cần nhảy theo bước <code class="text-emerald-300 font-mono">i += 6</code> và kiểm tra hai số <code class="text-white font-mono">i</code> và <code class="text-white font-mono">i + 2</code>. Kỹ thuật này giảm <strong>2/3 số lượng phép chia thử nghiệm</strong>, tối ưu hiệu năng tối đa cho Go runtime!
+              </p>
+            </div>
+
+            <div class="bg-slate-950 p-3 rounded-xl border border-bordercol flex justify-between items-center text-xs font-mono">
+              <span class="text-slate-400">Độ phức tạp: <strong class="text-emerald-400">O(√n / 3)</strong></span>
+              <span class="text-slate-400">Bộ nhớ: <strong class="text-emerald-400">O(1)</strong></span>
+              <span class="text-slate-400">Tối ưu: Bỏ qua 2 và 3</span>
+            </div>
+          </div>
+        `,
+        run: (params) => {
+          const n = parseInt(params.ex10_n) || 0;
+          if (n <= 1) return [`${n} KHÔNG PHẢI số nguyên tố (Số nguyên tố phải > 1).`];
+          let isP = true;
+          let factor = null;
+          const limit = Math.floor(Math.sqrt(n));
+          for (let i = 2; i <= limit; i++) {
+            if (n % i === 0) {
+              isP = false;
+              factor = i;
+              break;
+            }
+          }
+          if (isP) {
+            return [
+              `Số: ${n}`,
+              `Kết luận: LÀ SỐ NGUYÊN TỐ (Prime Number) ✓`,
+              `Đã kiểm tra tất cả các ước từ 2 đến √${n} ≈ ${limit}, không có ước nào chia hết.`
+            ];
+          } else {
+            return [
+              `Số: ${n}`,
+              `Kết luận: HỢP SỐ (Không nguyên tố) ✗`,
+              `Tìm thấy ước số chia hết đầu tiên: ${factor} (vì ${n} = ${factor} * ${n / factor})`
+            ];
+          }
+        }
+      },
+      {
+        id: 11,
+        cat: 'math',
+        title: 'Liệt kê SNT: Sàng Eratosthenes',
+        desc: 'Tìm tất cả số nguyên tố trong khoảng [2, N] sử dụng thuật toán Sàng Eratosthenes hiệu quả.',
+        inputs: [
+          { id: 'ex11_limit', label: 'Giới hạn trên N (từ 10 đến 500)', type: 'number', val: 100 }
+        ],
+        code: `package main
+
+import "fmt"
+
+func sieveOfEratosthenes(n int) []int {
+    // Khởi tạo mảng boolean true
+    isPrime := make([]bool, n+1)
+    for i := 2; i <= n; i++ {
+        isPrime[i] = true
+    }
+
+    for p := 2; p*p <= n; p++ {
+        if isPrime[p] {
+            // Đánh dấu các bội số của p là false
+            for i := p * p; i <= n; i += p {
+                isPrime[i] = false
+            }
+        }
+    }
+
+    var primes []int
+    for p := 2; p <= n; p++ {
+        if isPrime[p] {
+            primes = append(primes, p)
+        }
+      }
+    return primes
+}
+
+func main() {
+    primes := sieveOfEratosthenes(100)
+    fmt.Printf("Có %d số nguyên tố <= 100: %v\\n", len(primes), primes)
+}`,
+        lines: [
+          { line: '7-10', code: 'isPrime := make([]bool, n+1)\nfor i := 2; i <= n; i++ { isPrime[i] = true }', exp: 'Cấp phát mảng cờ boolean kích thước $n+1$. Ban đầu giả định mọi số từ 2 đến n đều là số nguyên tố (true).' },
+          { line: '12', code: 'for p := 2; p*p <= n; p++ {', exp: 'Chỉ cần quét `p` cho tới khi $p^2 \\le n$. Các hợp số sau $\\sqrt{n}$ sẽ tự động bị loại bỏ bởi các ước nhỏ hơn.' },
+          { line: '15-17', code: 'for i := p * p; i <= n; i += p {\n    isPrime[i] = false\n}', exp: 'Mẹo tối ưu: Bắt đầu gạch bỏ các bội số từ $p \\times p$ thay vì $2 \\times p$ (bởi vì các bội số nhỏ hơn đã bị các số trước đó sàng lọc rồi).' },
+          { line: '21-25', code: 'for p := 2; p <= n; p++ {\n    if isPrime[p] { primes = append(primes, p) }\n}', exp: 'Duyệt lại mảng cờ và dùng hàm `append` gom toàn bộ các số vẫn còn giữ cờ `true` vào lát cắt kết quả.' }
+        ],
+        theory: `
+          <div class="space-y-4 font-sans">
+            <div class="border-l-4 border-gopher-500 pl-4 py-1 bg-gopher-500/10 rounded-r-xl">
+              <h4 class="font-bold text-white text-base">🎯 1. Nguyên Lý Sàng Lọc (Elimination Principle)</h4>
+              <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                Thay vì kiểm tra từng số độc lập (rất chậm với $O(N \sqrt{N})$), nhà toán học Hy Lạp cổ đại Eratosthenes nhận ra rằng: khi tìm thấy một số nguyên tố $p$, toàn bộ các bội số của nó ($2p, 3p, 4p...$) chắc chắn là hợp số. Ta chỉ cần đánh dấu loại bỏ tất cả bội số đó như dùng một cái sàng lọc cát.
+              </p>
+            </div>
+
+            <div class="bg-darkbg p-4 rounded-2xl border border-bordercol space-y-2 text-xs">
+              <h5 class="font-bold text-sm text-cyan-400">⚡ 2. Mẹo Tối Ưu Bắt Đầu Từ p * p</h5>
+              <p class="text-slate-300 leading-relaxed">
+                Tại sao vòng lặp con lại bắt đầu từ <code class="text-gopher-400 font-mono">i := p * p</code> chứ không phải <code class="text-slate-400 font-mono">2 * p</code>?
+                <br>Bởi vì các bội số nhỏ hơn như $2p, 3p, \dots, (p-1)p$ chắc chắn đã được đánh dấu loại bỏ bởi các số nguyên tố nhỏ hơn $p$ từ trước rồi! Bước tối ưu này giúp tiết kiệm hàng triệu chu kỳ CPU khi $N$ lên tới $10^7$.
+              </p>
+            </div>
+
+            <div class="bg-slate-950 p-3 rounded-xl border border-bordercol flex justify-between items-center text-xs font-mono">
+              <span class="text-slate-400">Độ phức tạp thời gian: <strong class="text-emerald-400">O(N log log N)</strong></span>
+              <span class="text-slate-400">Bộ nhớ phụ: <strong class="text-yellow-400">O(N)</strong> mảng bool</span>
+            </div>
+          </div>
+        `,
+        run: (params) => {
+          const n = Math.min(500, Math.max(10, parseInt(params.ex11_limit) || 100));
+          const isPrime = new Array(n + 1).fill(true);
+          isPrime[0] = false; isPrime[1] = false;
+          for (let p = 2; p * p <= n; p++) {
+            if (isPrime[p]) {
+              for (let i = p * p; i <= n; i += p) isPrime[i] = false;
+            }
+          }
+          const primes = [];
+          for (let i = 2; i <= n; i++) if (isPrime[i]) primes.push(i);
+
+          return [
+            `Danh sách số nguyên tố trong đoạn [2, ${n}]:`,
+            primes.join(', '),
+            ``,
+            `Tổng cộng có ${primes.length} số nguyên tố.`
+          ];
+        }
+      },
+      {
+        id: 12,
+        cat: 'math',
+        title: 'Tính tổng chữ số của số nguyên',
+        desc: 'Nhập vào một số nguyên dương, tính tổng tất cả các chữ số của nó (VD: 1234 -> 1 + 2 + 3 + 4 = 10).',
+        inputs: [
+          { id: 'ex12_num', label: 'Nhập số nguyên dương', type: 'number', val: 98765 }
+        ],
+        code: `package main
+
+import "fmt"
+
+func sumDigits(n int) int {
+    if n < 0 {
+        n = -n // Xử lý nếu là số âm
+    }
+    sum := 0
+    for n > 0 {
+        sum += n % 10 // Lấy chữ số tận cùng
+        n /= 10       // Bỏ chữ số tận cùng
+    }
+    return sum
+}
+
+func main() {
+    num := 98765
+    fmt.Printf("Tổng các chữ số của %d là: %d\\n", num, sumDigits(num))
+}`,
+        lines: [
+          { line: '6-8', code: 'if n < 0 { n = -n }', exp: 'Xử lý biên: Nếu số nhập vào là số âm, đổi dấu thành số dương tương ứng để phép tính tổng chữ số không bị sai lệch.' },
+          { line: '10', code: 'for n > 0 {', exp: 'Vòng lặp chạy cho đến khi toàn bộ các hàng chữ số bị bóc tách hết về 0.' },
+          { line: '11', code: 'sum += n % 10', exp: 'Toán tử chia lấy dư `% 10` giúp lấy ra chữ số ở hàng đơn vị cuối cùng và cộng dồn vào `sum`.' },
+          { line: '12', code: 'n /= 10', exp: 'Toán tử chia nguyên `/= 10` cắt bỏ chữ số vừa lấy đi nhờ tính chất làm tròn số nguyên của Go.' }
+        ],
+        theory: `
+          <div class="space-y-4 font-sans">
+            <div class="border-l-4 border-gopher-500 pl-4 py-1 bg-gopher-500/10 rounded-r-xl">
+              <h4 class="font-bold text-white text-base">🎯 1. Thuật Toán Bóc Tách Số Học Thuần Túy</h4>
+              <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                Mọi số nguyên trong hệ thập phân đều có thể tách rời các hàng số bằng 2 phép toán cơ bản:
+                <br>• <code class="text-gopher-400 font-mono">n % 10</code>: Lấy chữ số hàng đơn vị cuối cùng.
+                <br>• <code class="text-gopher-400 font-mono">n /= 10</code>: Cắt bỏ chữ số cuối cùng nhờ tính chất làm tròn của phép chia nguyên.
+              </p>
+            </div>
+
+            <div class="bg-darkbg p-4 rounded-2xl border border-bordercol space-y-2 text-xs">
+              <h5 class="font-bold text-sm text-emerald-400">💡 2. Tối Ưu Bộ Nhớ: Số Học vs Chuyển Chuỗi (String Conversion)</h5>
+              <p class="text-slate-300 leading-relaxed">
+                Người mới học thường chuyển số thành chuỗi ký tự bằng <code class="text-rose-400 font-mono">strconv.Itoa(n)</code> rồi lặp qua từng ký tự. Cách làm này rất tệ trong Go vì nó sẽ cấp phát đối tượng trên Heap (Heap Allocation) và tăng áp lực thu dọn rác (GC overhead).
+                <br>Phương pháp số học ở trên thực thi trực tiếp trên thanh ghi CPU, đạt tiêu chuẩn <strong class="text-emerald-400">Zero Memory Allocation</strong>.
+              </p>
+            </div>
+
+            <div class="bg-slate-950 p-3 rounded-xl border border-bordercol flex justify-between items-center text-xs font-mono">
+              <span class="text-slate-400">Số vòng lặp: <strong class="text-emerald-400">log10(N) + 1</strong> chữ số</span>
+              <span class="text-slate-400">Độ phức tạp: <strong class="text-emerald-400">O(số chữ số)</strong></span>
+              <span class="text-slate-400">Heap Alloc: <strong class="text-emerald-400">0 bytes</strong></span>
+            </div>
+          </div>
+        `,
+        run: (params) => {
+          let n = Math.abs(parseInt(params.ex12_num) || 0);
+          const original = n;
+          const digits = [];
+          let sum = 0;
+          if (n === 0) { digits.push(0); }
+          while (n > 0) {
+            const d = n % 10;
+            digits.unshift(d);
+            sum += d;
+            n = Math.floor(n / 10);
+          }
+          return [
+            `Số ban đầu: ${original}`,
+            `Các chữ số tách được: ${digits.join(' + ')}`,
+            `Tổng các chữ số = ${sum}`
+          ];
+        }
+      },
+      {
+        id: 13,
+        cat: 'math',
+        title: 'Đảo ngược số nguyên',
+        desc: 'Nhập số nguyên n, đảo ngược các chữ số của nó (VD: 12345 -> 54321).',
+        inputs: [
+          { id: 'ex13_num', label: 'Nhập số nguyên cần đảo', type: 'number', val: 123456 }
+        ],
+        code: `package main
+
+import "fmt"
+
+func reverseNumber(n int) int {
+    reversed := 0
+    isNegative := n < 0
+    if isNegative {
+        n = -n
+    }
+
+    for n > 0 {
+        reversed = reversed*10 + n%10
+        n /= 10
+    }
+
+    if isNegative {
+        reversed = -reversed
+    }
+    return reversed
+}
+
+func main() {
+    num := 123456
+    fmt.Printf("Số gốc : %d\\n", num)
+    fmt.Printf("Đảo lại: %d\\n", reverseNumber(num))
+}`,
+        lines: [
+          { line: '7-10', code: 'isNegative := n < 0\nif isNegative { n = -n }', exp: 'Ghi nhớ dấu âm của số ban đầu qua biến cờ boolean `isNegative` và lấy trị tuyệt đối để đảo số.' },
+          { line: '12-15', code: 'for n > 0 {\n    reversed = reversed*10 + n%10\n    n /= 10\n}', exp: 'Cơ chế dịch chuyển hàng thập phân: Mỗi lần lấy được số dư đuôi `n % 10`, ta nhân số cũ với 10 (dịch sang trái một hàng) rồi cộng đuôi mới vào.' },
+          { line: '17-19', code: 'if isNegative { reversed = -reversed }', exp: 'Gắn trả lại dấu âm cho số đã được đảo ngược trước khi return.' }
+        ],
+        theory: `
+          <div class="space-y-4 font-sans">
+            <div class="border-l-4 border-gopher-500 pl-4 py-1 bg-gopher-500/10 rounded-r-xl">
+              <h4 class="font-bold text-white text-base">🎯 1. Cơ Chế Dịch Chuyển Hàng Thập Phân</h4>
+              <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                Mỗi khi lấy được một chữ số từ đuôi của số cũ, ta dịch toàn bộ các chữ số đã có của số mới sang bên trái một hàng bằng cách nhân với 10: <code class="text-emerald-300 font-mono">reversed = reversed * 10 + (n % 10)</code>.
+              </p>
+            </div>
+
+            <div class="bg-darkbg p-4 rounded-2xl border border-red-500/30 space-y-2 text-xs">
+              <h5 class="font-bold text-sm text-red-400">⚠️ 2. Cạm Bẫy Tràn Số Khi Đảo Ngược (LeetCode #7)</h5>
+              <p class="text-slate-300 leading-relaxed">
+                Trong môi trường thực tế với kiểu số có giới hạn như <code class="text-white font-mono">int32</code> (từ -2,147,483,648 đến 2,147,483,647), việc đảo ngược một số hợp lệ như <code class="text-cyan-300 font-mono">1,999,999,999</code> sẽ cho ra kết quả đảo <code class="text-rose-400 font-mono">9,999,999,991</code> vượt quá giới hạn 32-bit.
+                <br>Trong bài toán kỹ thuật nâng cao, trước khi nhân 10 ta luôn phải kiểm tra: <code class="text-white font-mono">if reversed &gt; math.MaxInt32/10 { return 0 }</code> để chống tràn số.
+              </p>
+            </div>
+
+            <div class="bg-slate-950 p-3 rounded-xl border border-bordercol flex justify-between items-center text-xs font-mono">
+              <span class="text-slate-400">Độ phức tạp: <strong class="text-emerald-400">O(log10 N)</strong></span>
+              <span class="text-slate-400">Không gian: <strong class="text-emerald-400">O(1)</strong></span>
+              <span class="text-slate-400">Bảo toàn dấu âm: <strong class="text-emerald-400">Có</strong></span>
+            </div>
+          </div>
+        `,
+        run: (params) => {
+          const original = parseInt(params.ex13_num) || 0;
+          let n = Math.abs(original);
+          let rev = 0;
+          while (n > 0) {
+            rev = rev * 10 + (n % 10);
+            n = Math.floor(n / 10);
+          }
+          if (original < 0) rev = -rev;
+          return [
+            `Số gốc       : ${original}`,
+            `Số sau khi đảo: ${rev}`
+          ];
+        }
+      },
+      {
+        id: 14,
+        cat: 'math',
+        title: 'Kiểm tra Số Palindrome (Đối xứng)',
+        desc: 'Kiểm tra xem một số nguyên dương có đọc xuôi và ngược giống nhau không (VD: 12321 là số đối xứng).',
+        inputs: [
+          { id: 'ex14_num', label: 'Nhập số kiểm tra Palindrome', type: 'number', val: 12321 }
+        ],
+        code: `package main
+
+import "fmt"
+
+func isPalindrome(n int) bool {
+    // Các số âm không thể là Palindrome (do dấu trừ ở đầu)
+    if n < 0 {
+        return false
+    }
+
+    original := n
+    reversed := 0
+    for n > 0 {
+        reversed = reversed*10 + n%10
+        n /= 10
+    }
+    return original == reversed
+}
+
+func main() {
+    val := 12321
+    if isPalindrome(val) {
+        fmt.Printf("%d LÀ số Palindrome (Đối xứng)!\\n", val)
+    } else {
+        fmt.Printf("%d KHÔNG PHẢI số Palindrome.\\n", val)
+    }
+}`,
+        lines: [
+          { line: '7-9', code: 'if n < 0 { return false }', exp: 'Loại trừ sớm (Early exit): Mọi số âm đều không thể là số đối xứng vì có dấu trừ `-` ở đầu.' },
+          { line: '11-16', code: 'original := n\nfor n > 0 { reversed = reversed*10 + n%10 ... }', exp: 'Lưu giá trị gốc vào `original`, tiến hành đảo ngược toàn bộ số theo thuật toán dịch hàng thập phân.' },
+          { line: '17', code: 'return original == reversed', exp: 'So sánh số ban đầu với số sau khi đảo: Nếu bằng nhau thì chính là số Palindrome.' }
+        ],
+        theory: `
+          <div class="space-y-4 font-sans">
+            <div class="border-l-4 border-gopher-500 pl-4 py-1 bg-gopher-500/10 rounded-r-xl">
+              <h4 class="font-bold text-white text-base">🎯 1. Định Nghĩa Palindrome & Biên Xử Lý (Edge Cases)</h4>
+              <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                Số Palindrome là số có thứ tự chữ số khi đọc từ trái sang phải bằng đúng khi đọc từ phải sang trái (ví dụ: 7, 121, 12321, 8888).
+                <br><strong>Các trường hợp biên cần loại trừ ngay ở đầu hàm (Early Exit):</strong>
+                <br>• Tất cả các số âm: Không thể là Palindrome vì có dấu trừ ở đầu (<code class="text-rose-300 font-mono">-121 != 121-</code>).
+                <br>• Các số tận cùng bằng 0 (ngoại trừ chính số 0): Không thể đối xứng vì số nguyên không thể bắt đầu bằng số 0 (ví dụ số 10 đọc ngược là 01 = 1).
+              </p>
+            </div>
+
+            <div class="bg-darkbg p-4 rounded-2xl border border-bordercol space-y-2 text-xs">
+              <h5 class="font-bold text-sm text-cyan-400">💡 2. Mẹo Tối Ưu Bằng Cách Đảo Nửa Số</h5>
+              <p class="text-slate-300 leading-relaxed">
+                Thay vì đảo toàn bộ số rồi so sánh (có thể gây tràn số nếu số rất dài), ta chỉ cần đảo <strong>một nửa số</strong> cho đến khi <code class="text-emerald-300 font-mono">reversed &gt;= n</code>. Khi đó:
+                <br>• Số chữ số chẵn (1221): <code class="text-white font-mono">n == reversed</code> (12 == 12).
+                <br>• Số chữ số lẻ (12321): <code class="text-white font-mono">n == reversed / 10</code> (12 == 123/10).
+              </p>
+            </div>
+          </div>
+        `,
+        run: (params) => {
+          const num = parseInt(params.ex14_num) || 0;
+          if (num < 0) return [`${num} KHÔNG PHẢI số Palindrome (Số âm có dấu trừ không đối xứng).`];
+          let temp = num;
+          let rev = 0;
+          while (temp > 0) {
+            rev = rev * 10 + (temp % 10);
+            temp = Math.floor(temp / 10);
+          }
+          const isP = (num === rev);
+          return [
+            `Số kiểm tra: ${num}`,
+            `Đọc ngược lại: ${rev}`,
+            `Kết luận: ${isP ? 'LÀ SỐ PALINDROME (ĐỐI XỨNG) ✓' : 'KHÔNG PHẢI SỐ PALINDROME ✗'}`
+          ];
+        }
+      },
+      {
+        id: 15,
+        cat: 'math',
+        title: 'ƯCLN (GCD) & BCNN (LCM) - Euclid',
+        desc: 'Sử dụng thuật toán Euclid cổ điển để tìm Ước chung lớn nhất và Bội chung nhỏ nhất của 2 số.',
+        inputs: [
+          { id: 'ex15_a', label: 'Số nguyên thứ nhất (a)', type: 'number', val: 48 },
+          { id: 'ex15_b', label: 'Số nguyên thứ hai (b)', type: 'number', val: 18 }
+        ],
+        code: `package main
+
+import "fmt"
+
+// Thuật toán Euclid tìm Ước Chung Lớn Nhất
+func gcd(a, b int) int {
+    for b != 0 {
+        a, b = b, a%b // Cú pháp gán đồng thời (Tuple assignment) của Go!
+    }
+    return a
+}
+
+// Bội Chung Nhỏ Nhất: (a * b) / GCD(a, b)
+func lcm(a, b int) int {
+    if a == 0 || b == 0 {
+        return 0
+    }
+    return (a * b) / gcd(a, b)
+}
+
+func main() {
+    a, b := 48, 18
+    fmt.Printf("GCD(%d, %d) = %d\\n", a, b, gcd(a, b))
+    fmt.Printf("LCM(%d, %d) = %d\\n", a, b, lcm(a, b))
+}`,
+        lines: [
+          { line: '6-10', code: 'func gcd(a, b int) int {\n    for b != 0 {\n        a, b = b, a%b\n    }\n    return a\n}', exp: 'Thuật toán Euclid: `a, b = b, a%b` là **Tuple Assignment** của Go. Vế phải được tính toán trước rồi gán đồng thời vào vế trái, không cần tạo bất kỳ biến tạm `temp` nào.' },
+          { line: '14-19', code: 'func lcm(a, b int) int {\n    if a == 0 || b == 0 { return 0 }\n    return (a * b) / gcd(a, b)\n}', exp: 'Tính BCNN. Trong thực tế để chống tràn số trung gian, ta nên viết chia trước nhân sau: `(a / gcd(a, b)) * b`.' }
+        ],
+        theory: `
+          <div class="space-y-4 font-sans">
+            <div class="border-l-4 border-gopher-500 pl-4 py-1 bg-gopher-500/10 rounded-r-xl">
+              <h4 class="font-bold text-white text-base">🎯 1. Định Lý Thuật Toán Euclid (300 TCN)</h4>
+              <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                Định lý Euclid chứng minh: Ước chung lớn nhất của hai số $a$ và $b$ cũng chính là ước chung lớn nhất của $b$ và số dư của $a$ chia cho $b$:
+                $$\gcd(a, b) = \gcd(b, a \pmod b)$$
+                Quá trình này lặp đi lặp lại với tốc độ cực nhanh cho tới khi số dư bằng 0, khi đó giá trị $a$ còn lại chính là ƯCLN.
+              </p>
+            </div>
+
+            <div class="bg-darkbg p-4 rounded-2xl border border-bordercol space-y-2 text-xs">
+              <h5 class="font-bold text-sm text-cyan-400">✨ 2. Phép Gán Tuple Kỳ Diệu Trong Go: Không Cần Biến Tạm!</h5>
+              <p class="text-slate-300 leading-relaxed">
+                Trong C, C++ hoặc Java, bạn phải dùng biến phụ: <code class="text-slate-400 font-mono">temp = b; b = a % b; a = temp;</code>.
+                <br>Trong Go, cú pháp <code class="text-emerald-400 font-mono">a, b = b, a%b</code> thực hiện <strong>gán đồng thời (Tuple Assignment)</strong>: runtime sẽ tính toán toàn bộ biểu thức vế phải trước, sau đó gán cùng lúc sang vế trái. Bạn không cần tốn thêm dòng code nào cho biến tạm!
+              </p>
+            </div>
+
+            <div class="bg-darkbg p-4 rounded-2xl border border-bordercol space-y-2 text-xs">
+              <h5 class="font-bold text-sm text-amber-400">⚠️ 3. Chống Tràn Số Khi Tính BCNN (LCM)</h5>
+              <p class="text-slate-300 leading-relaxed">
+                Công thức toán học là: $LCM(a, b) = \frac{a \times b}{\gcd(a, b)}$.
+                <br>Nếu tính <code class="text-rose-400 font-mono">(a * b)</code> trước, tích có thể vượt trần kiểu dữ liệu dẫn đến tràn số. Vì vậy chuẩn lập trình là: <strong>Chia trước, nhân sau</strong>:
+                <br><code class="text-emerald-300 font-mono">return (a / gcd(a, b)) * b</code>.
+              </p>
+            </div>
+          </div>
+        `,
+        run: (params) => {
+          let a = Math.abs(parseInt(params.ex15_a) || 0);
+          let b = Math.abs(parseInt(params.ex15_b) || 0);
+          const origA = a, origB = b;
+          while (b !== 0) {
+            const temp = b;
+            b = a % b;
+            a = temp;
+          }
+          const gcdVal = a;
+          const lcmVal = (origA === 0 || origB === 0) ? 0 : (origA * origB) / gcdVal;
+          return [
+            `Hai số đầu vào: a = ${origA}, b = ${origB}`,
+            `Ước chung lớn nhất  (GCD/UCLN): ${gcdVal}`,
+            `Bội chung nhỏ nhất (LCM/BCNN): ${lcmVal}`
+          ];
+        }
+      },
+      {
+        id: 16,
+        cat: 'math',
+        title: 'Chuyển đổi cơ số thủ công (Base 10 -> 2 & 16)',
+        desc: 'Tự viết thuật toán chuyển một số từ hệ cơ số 10 sang chuỗi nhị phân (Binary) và thập lục phân (Hex) không dùng hàm thư viện.',
+        inputs: [
+          { id: 'ex16_n', label: 'Số thập phân (Base 10)', type: 'number', val: 255 }
+        ],
+        code: `package main
+
+import "fmt"
+
+func toBinary(n int) string {
+    if n == 0 {
+        return "0"
+    }
+    result := ""
+    for n > 0 {
+        rem := n % 2
+        result = fmt.Sprintf("%d", rem) + result
+        n /= 2
+    }
+    return result
+}
+
+func toHex(n int) string {
+    if n == 0 {
+        return "0"
+    }
+    digits := "0123456789ABCDEF"
+    result := ""
+    for n > 0 {
+        rem := n % 16
+        result = string(digits[rem]) + result
+        n /= 16
+    }
+    return result
+}
+
+func main() {
+    num := 255
+    fmt.Printf("Thập phân (10) : %d\\n", num)
+    fmt.Printf("Nhị phân (2)   : %s\\n", toBinary(num))
+    fmt.Printf("Thập lục (16)  : 0x%s\\n", toHex(num))
+}`,
+        lines: [
+          { line: '9-14', code: 'for n > 0 {\n    rem := n % 2\n    result = fmt.Sprintf("%d", rem) + result\n    n /= 2\n}', exp: 'Chuyển sang nhị phân: Liên tục chia cho 2 lấy phần dư `n % 2`. Ghép chuỗi ngược: số dư mới luôn được cộng vào phía trước chuỗi `result`.' },
+          { line: '22', code: 'digits := "0123456789ABCDEF"', exp: 'Bảng tra cứu (Lookup Table) gồm 16 ký tự Hex. Giúp ánh xạ số dư từ 0 đến 15 thành ký tự tương ứng trong thời gian $O(1)$ mà không cần switch-case.' },
+          { line: '24-28', code: 'for n > 0 {\n    rem := n % 16\n    result = string(digits[rem]) + result\n    n /= 16\n}', exp: 'Chuyển sang Hex: Lấy phần dư chia 16, bốc ký tự `digits[rem]` và ghép về phía trước chuỗi.' }
+        ],
+        theory: `
+          <div class="space-y-4 font-sans">
+            <div class="border-l-4 border-gopher-500 pl-4 py-1 bg-gopher-500/10 rounded-r-xl">
+              <h4 class="font-bold text-white text-base">🎯 1. Bản Chất Toán Học Của Chuyển Đổi Hệ Cơ Số</h4>
+              <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                Để chuyển một số $N$ từ hệ thập phân sang bất kỳ hệ cơ số $B$ nào (nhị phân $B=2$, bát phân $B=8$, hex $B=16$), ta liên tục thực hiện:
+                <br>1. Lấy phần dư: <code class="text-emerald-300 font-mono">rem = N % B</code> (đây là chữ số ở hàng hiện tại).
+                <br>2. Chia nguyên: <code class="text-emerald-300 font-mono">N = N / B</code>.
+                <br>3. Ghép các số dư thu được theo thứ tự <strong>ngược từ dưới lên trên</strong>.
+              </p>
+            </div>
+
+            <div class="bg-darkbg p-4 rounded-2xl border border-bordercol space-y-2 text-xs">
+              <h5 class="font-bold text-sm text-cyan-400">🔤 2. Ánh Xạ Ký Tự Hex Qua Chuỗi Tra Cứu (Lookup Table)</h5>
+              <p class="text-slate-300 leading-relaxed">
+                Hệ 16 (Hexadecimal) sử dụng 16 ký tự: $0-9$ và $A-F$ (trong đó A=10, B=11, C=12, D=13, E=14, F=15). Thay vì viết một chuỗi <code class="text-white font-mono">switch case</code> 16 nhánh dài dòng, ta dùng bảng tra cứu <code class="text-gopher-300 font-mono">digits := "0123456789ABCDEF"</code> và bốc ký tự ngay tức thì qua vị trí index: <code class="text-emerald-300 font-mono">digits[rem]</code> trong $O(1)$!
+              </p>
+            </div>
+
+            <div class="bg-darkbg p-4 rounded-2xl border border-bordercol space-y-2 text-xs">
+              <h5 class="font-bold text-sm text-emerald-400">💡 3. Mẹo Nối Chuỗi Hiệu Năng Cao Với strings.Builder</h5>
+              <p class="text-slate-300 leading-relaxed">
+                Trong đoạn code ví dụ minh họa, ta dùng phép cộng chuỗi <code class="text-slate-300 font-mono">result = rem + result</code>. Trong môi trường Go production với số lượng lớn, phép cộng chuỗi liên tục sẽ tạo nhiều đối tượng rác trên Heap. Lập trình viên Go chuyên nghiệp sẽ dùng mảng byte <code class="text-gopher-400 font-mono">[]byte</code> hoặc <code class="text-gopher-400 font-mono">strings.Builder</code> rồi đảo ngược mảng để đạt tốc độ tối đa.
+              </p>
+            </div>
+          </div>
+        `,
+        run: (params) => {
+          const n = parseInt(params.ex16_n) || 0;
+          return [
+            `Số thập phân (Base 10): ${n}`,
+            `Mã nhị phân  (Base 2) : ${n.toString(2)}`,
+            `Mã bát phân  (Base 8) : ${n.toString(8)}`,
+            `Mã Hex       (Base 16): 0x${n.toString(16).toUpperCase()}`
+          ];
+        }
+      },
+      {
+        id: 17,
+        cat: 'loop',
+        title: 'Vẽ Tam giác Sao (*) & Tam giác số Floyd',
+        desc: 'Nhập chiều cao h, in tam giác cân bằng ký tự * và tam giác số Floyd thẳng hàng.',
+        inputs: [
+          { id: 'ex17_h', label: 'Chiều cao tam giác h (3 đến 10)', type: 'number', val: 5 }
+        ],
+        code: `package main
+
+import "fmt"
+
+func printStarPyramid(h int) {
+    fmt.Println("=== Tam giác sao cân ===")
+    for i := 1; i <= h; i++ {
+        // In khoảng trắng
+        for s := 1; s <= h-i; s++ {
+            fmt.Print(" ")
+        }
+        // In sao
+        for k := 1; k <= 2*i-1; k++ {
+            fmt.Print("*")
+        }
+        fmt.Println()
+    }
+}
+
+func printFloydTriangle(h int) {
+    fmt.Println("\\n=== Tam giác số Floyd ===")
+    count := 1
+    for i := 1; i <= h; i++ {
+        for j := 1; j <= i; j++ {
+            fmt.Printf("%3d", count)
+            count++
+        }
+        fmt.Println()
+    }
+}
+
+func main() {
+    h := 5
+    printStarPyramid(h)
+    printFloydTriangle(h)
+}`,
+        lines: [
+          { line: '8-10', code: 'for s := 1; s <= h-i; s++ {\n    fmt.Print(" ")\n}', exp: 'Vòng lặp in khoảng trắng lề trái: Mỗi hàng $i$ cần đúng $h - i$ dấu cách để đẩy đỉnh tam giác vào chính giữa.' },
+          { line: '12-14', code: 'for k := 1; k <= 2*i-1; k++ {\n    fmt.Print("*")\n}', exp: 'Vòng lặp in sao: Số lượng ngôi sao luôn là số lẻ $2i - 1$ (1, 3, 5, 7...) tạo nên hình chóp cân.' },
+          { line: '21-27', code: 'count := 1\nfor i := 1; i <= h; i++ {\n    for j := 1; j <= i; j++ {\n        fmt.Printf("%3d", count)\n        count++\n    }\n}', exp: 'Tam giác Floyd: Hàng thứ $i$ in đúng $i$ số liên tiếp. Định dạng `%3d` ép chiếm đúng 3 ký tự, giữ các cột luôn thẳng hàng ngay ngắn.' }
+        ],
+        theory: `
+          <div class="space-y-4 font-sans">
+            <div class="border-l-4 border-gopher-500 pl-4 py-1 bg-gopher-500/10 rounded-r-xl">
+              <h4 class="font-bold text-white text-base">🎯 1. Rèn Luyện Tư Duy Không Gian 2 Chiều (2D Coordinates)</h4>
+              <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                Vẽ hình trong console là bài tập kinh điển giúp lập trình viên kiểm soát tư duy tọa độ ma trận:
+                <br>• Vòng lặp ngoài kiểm soát <strong>dòng (Row $i$)</strong>: Chạy từ 1 đến chiều cao $h$.
+                <br>• Vòng lặp trong kiểm soát <strong>cột (Column $j$)</strong>: Quyết định vẽ khoảng trắng hay ký tự tại tọa độ đó.
+              </p>
+            </div>
+
+            <div class="bg-darkbg p-4 rounded-2xl border border-bordercol space-y-2 text-xs">
+              <h5 class="font-bold text-sm text-cyan-400">📐 2. Công Thức Hình Học Tam Giác Cân</h5>
+              <div class="space-y-1.5 text-slate-300 font-mono">
+                <p>Tại mỗi hàng $i$ (từ 1 đến $h$):</p>
+                <p>• Số ký tự khoảng trắng đầu dòng = <code class="text-yellow-300">h - i</code>.</p>
+                <p>• Số ký tự ngôi sao '*' = <code class="text-emerald-300">2 * i - 1</code> (luôn là số lẻ: 1, 3, 5, 7... để tạo đỉnh nhọn cân đối chính giữa).</p>
+              </div>
+            </div>
+
+            <div class="bg-darkbg p-4 rounded-2xl border border-bordercol space-y-2 text-xs">
+              <h5 class="font-bold text-sm text-purple-400">🔢 3. Tam Giác Số Floyd & Kỹ Thuật Tăng Tự Động</h5>
+              <p class="text-slate-300 leading-relaxed">
+                Tam giác Floyd được đặt theo tên của nhà khoa học máy tính Robert Floyd. Hàng thứ $i$ sẽ in chính xác $i$ số tự nhiên tăng dần liên tục. Sử dụng định dạng <code class="text-gopher-400 font-mono">%3d</code> giúp ép các số có 1 chữ số, 2 chữ số hay 3 chữ số đều căn thẳng mép theo cột dọc một cách ngay ngắn.
+              </p>
+            </div>
+          </div>
+        `,
+        run: (params) => {
+          const h = Math.min(10, Math.max(3, parseInt(params.ex17_h) || 5));
+          const lines = [`=== Tam giác sao cân (h = ${h}) ===`];
+          for (let i = 1; i <= h; i++) {
+            const spaces = " ".repeat(h - i);
+            const stars = "*".repeat(2 * i - 1);
+            lines.push(spaces + stars);
+          }
+          lines.push(``);
+          lines.push(`=== Tam giác số Floyd (h = ${h}) ===`);
+          let count = 1;
+          for (let i = 1; i <= h; i++) {
+            let row = "";
+            for (let j = 1; j <= i; j++) {
+              row += count.toString().padStart(3, ' ') + " ";
+              count++;
+            }
+            lines.push(row);
+          }
+          return lines;
+        }
+      },
+      {
+        id: 18,
+        cat: 'math',
+        title: 'Lũy thừa nhanh O(log b) - Binary Exp',
+        desc: 'Tính a^b với độ phức tạp O(log b) bằng thuật toán lũy thừa nhị phân (Binary Exponentiation).',
+        inputs: [
+          { id: 'ex18_a', label: 'Cơ số (a)', type: 'number', val: 3 },
+          { id: 'ex18_b', label: 'Số mũ (b)', type: 'number', val: 13 }
+        ],
+        code: `package main
+
+import "fmt"
+
+// Binary Exponentiation: Tính a^b trong O(log b)
+func fastPower(a uint64, b uint64) uint64 {
+    var result uint64 = 1
+    base := a
+
+    for b > 0 {
+        // Nếu bit cuối cùng của b là 1
+        if b&1 == 1 {
+            result *= base
+        }
+        base *= base // Bình phương cơ số
+        b >>= 1      // Dịch phải 1 bit (tương đương b /= 2)
+    }
+    return result
+}
+
+func main() {
+    var a, b uint64 = 3, 13
+    fmt.Printf("%d^%d = %d\\n", a, b, fastPower(a, b))
+}`,
+        lines: [
+          { line: '6-8', code: 'var result uint64 = 1\nbase := a', exp: 'Khởi tạo `result = 1` và gán `base = a` để liên tục bình phương cơ số.' },
+          { line: '12', code: 'if b&1 == 1 { result *= base }', exp: 'Phép toán Bitwise AND `b & 1 == 1`: Kiểm tra bit tận cùng của số mũ $b$. Nếu bit là 1, nhân cơ số hiện tại vào kết quả.' },
+          { line: '15', code: 'base *= base', exp: 'Bình phương cơ số: $a \\to a^2 \\to a^4 \\to a^8 \\dots$ giảm cấp số mũ cực nhanh.' },
+          { line: '16', code: 'b >>= 1', exp: 'Phép dịch phải 1 bit (Bitwise Right Shift), tương đương chia $b$ cho 2 nhưng được CPU thực hiện chỉ trong 1 chu kỳ xung nhịp.' }
+        ],
+        theory: `
+          <div class="space-y-4 font-sans">
+            <div class="border-l-4 border-gopher-500 pl-4 py-1 bg-gopher-500/10 rounded-r-xl">
+              <h4 class="font-bold text-white text-base">🎯 1. Sự Khác Biệt Giữa O(N) và O(log N)</h4>
+              <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                Để tính $3^{1000}$, nếu nhân tuần tự $3 \times 3 \times \dots \times 3$, CPU phải thực hiện 1.000 phép nhân.
+                <br>Với <strong>Lũy thừa nhị phân (Binary Exponentiation)</strong>, ta biểu diễn số mũ dưới dạng nhị phân. Ví dụ: $13 = 1101_2 = 2^3 + 2^2 + 2^0 = 8 + 4 + 1$.
+                <br>Khi đó: $3^{13} = 3^8 \times 3^4 \times 3^1$. Ta chỉ mất chưa đầy <strong>4 phép nhân</strong> thay vì 13 phép tính!
+              </p>
+            </div>
+
+            <div class="bg-darkbg p-4 rounded-2xl border border-bordercol space-y-2 text-xs">
+              <h5 class="font-bold text-sm text-cyan-400">⚡ 2. Tối Ưu Bằng Toán Tử Bitwise Trong CPU</h5>
+              <div class="space-y-1.5 text-slate-300 font-mono">
+                <p>• <code class="text-emerald-300">b &amp; 1 == 1</code>: Kiểm tra bit cuối cùng của $b$ có phải số 1 không (nhanh hơn phép modulo <code class="text-slate-400">b % 2 != 0</code> rất nhiều).</p>
+                <p>• <code class="text-emerald-300">b &gt;&gt;= 1</code>: Dịch phải 1 bit (Bitwise Right Shift), tương đương chia $b$ cho 2 nhưng được CPU thực hiện chỉ trong đúng 1 chu kỳ xung nhịp (Single Clock Cycle).</p>
+                <p>• <code class="text-emerald-300">base *= base</code>: Liên tục bình phương cơ số: $a \rightarrow a^2 \rightarrow a^4 \rightarrow a^8 \dots$</p>
+              </div>
+            </div>
+
+            <div class="bg-slate-950 p-3 rounded-xl border border-bordercol flex justify-between items-center text-xs font-mono">
+              <span class="text-slate-400">Với mũ b = 1.000.000:</span>
+              <span class="text-slate-400">Vòng lặp thường: <strong class="text-rose-400">1.000.000 lần</strong></span>
+              <span class="text-slate-400">Lũy thừa nhanh: <strong class="text-emerald-400">~20 lần</strong></span>
+            </div>
+          </div>
+        `,
+        run: (params) => {
+          const a = BigInt(parseInt(params.ex18_a) || 2);
+          const b = BigInt(parseInt(params.ex18_b) || 10);
+          let res = 1n;
+          let base = a;
+          let tempB = b;
+          while (tempB > 0n) {
+            if ((tempB & 1n) === 1n) res *= base;
+            base *= base;
+            tempB >>= 1n;
+          }
+          return [
+            `Tính ${a.toString()}^${b.toString()} bằng Lũy Thừa Nhị Phân:`,
+            `Kết quả: ${res.toString()}`,
+            `Số phép nhân xấp xỉ: ~${Math.ceil(Math.log2(Number(b) + 1))} phép tính (thay vì ${b} lần lặp).`
+          ];
+        }
+      },
+      {
+        id: 19,
+        cat: 'control',
+        title: 'Máy tính BMI & switch không điều kiện',
+        desc: 'Nhập cân nặng (kg) và chiều cao (m), tính chỉ số BMI và xếp loại bằng switch không điều kiện của Go.',
+        inputs: [
+          { id: 'ex19_weight', label: 'Cân nặng (kg)', type: 'number', val: 68 },
+          { id: 'ex19_height', label: 'Chiều cao (mét)', type: 'number', val: 1.72 }
+        ],
+        code: `package main
+
+import "fmt"
+
+func main() {
+    weight := 68.0 // kg
+    height := 1.72 // m
+
+    bmi := weight / (height * height)
+    fmt.Printf("Chỉ số BMI: %.2f\\n", bmi)
+
+    // Cú pháp 'switch không điều kiện' thay thế chuỗi if-else dài ngoằng
+    var category string
+    switch {
+    case bmi < 18.5:
+        category = "Gầy (Thiếu cân)"
+    case bmi < 24.9:
+        category = "Bình thường (Lý tưởng)"
+    case bmi < 29.9:
+        category = "Tiền béo phì (Thừa cân)"
+    default:
+        category = "Béo phì (Cần chú ý sức khỏe!)"
+    }
+
+    fmt.Printf("Đánh giá: %s\\n", category)
+}`,
+        lines: [
+          { line: '9', code: 'bmi := weight / (height * height)', exp: 'Công thức tiêu chuẩn WHO: Cân nặng (kg) chia cho bình phương chiều cao (mét).' },
+          { line: '14', code: 'switch {', exp: 'Cú pháp **Tagless Switch** (Switch không điều kiện): Tương đương `switch true`. Giúp đánh giá các biểu thức boolean tuần tự mà không cần viết chuỗi `if-else if` rối mắt.' },
+          { line: '15-22', code: 'case bmi < 18.5: ...\ncase bmi < 24.9: ...\ndefault: ...', exp: 'Các nhánh điều kiện. Case đầu tiên thỏa mãn sẽ được thực thi và tự động thoát khỏi switch.' }
+        ],
+        theory: `
+          <div class="space-y-4 font-sans">
+            <div class="border-l-4 border-gopher-500 pl-4 py-1 bg-gopher-500/10 rounded-r-xl">
+              <h4 class="font-bold text-white text-base">🎯 1. Đặc Sản Go: "Tagless Switch" (Switch Không Điều Kiện)</h4>
+              <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                Trong đa số ngôn ngữ khác (C, Java, JavaScript), từ khóa switch bắt buộc phải đi kèm một biến biểu thức: <code class="text-slate-400 font-mono">switch(variable)</code>.
+                <br>Trong Go, bạn có thể viết <code class="text-gopher-400 font-mono">switch { case condition1: ... case condition2: ... }</code> mà không cần truyền bất kỳ biến nào vào! Thực chất cú pháp này tương đương với <code class="text-white font-mono">switch true</code>, giúp thay thế hoàn toàn chuỗi lệnh <code class="text-slate-400 font-mono">if ... else if ... else if</code> dài ngoằng và khó nhìn.
+              </p>
+            </div>
+
+            <div class="bg-darkbg p-4 rounded-2xl border border-bordercol space-y-2 text-xs">
+              <h5 class="font-bold text-sm text-emerald-400">💡 2. Cấu Trúc Bảng Biểu Rõ Ràng & Clean Code</h5>
+              <p class="text-slate-300 leading-relaxed">
+                Khi phân loại các ngưỡng (ví dụ: xếp loại học sinh theo điểm GPA, phân loại dải thuế thu nhập, phân loại BMI theo WHO), việc dùng switch không điều kiện giúp code sắp xếp giống hệt một bảng tra cứu nghiệp vụ, cực kỳ dễ bảo trì và mở rộng thêm các dải điều kiện mới mà không sợ lồng ngoặc nhọn sai.
+              </p>
+            </div>
+
+            <div class="bg-slate-950 p-3 rounded-xl border border-bordercol flex justify-between items-center text-xs font-mono">
+              <span class="text-slate-400">Công thức BMI: <strong class="text-cyan-400">cân_nặng / (chiều_cao²)</strong></span>
+              <span class="text-slate-400">Đơn vị: <strong class="text-white">kg và mét</strong></span>
+              <span class="text-slate-400">Độ phức tạp: <strong class="text-emerald-400">O(1)</strong></span>
+            </div>
+          </div>
+        `,
+        run: (params) => {
+          const w = parseFloat(params.ex19_weight) || 60;
+          const h = parseFloat(params.ex19_height) || 1.7;
+          if (h <= 0) return [`Chiều cao phải > 0!`];
+          const bmi = w / (h * h);
+          let cat = "";
+          if (bmi < 18.5) cat = "Gầy (Thiếu cân)";
+          else if (bmi < 24.9) cat = "Bình thường (Cân đối)";
+          else if (bmi < 29.9) cat = "Tiền béo phì (Thừa cân)";
+          else cat = "Béo phì (Cần kiểm soát chế độ ăn uống & tập luyện)";
+
+          return [
+            `Cân nặng : ${w} kg`,
+            `Chiều cao: ${h} m`,
+            `Chỉ số BMI = ${bmi.toFixed(2)}`,
+            `Phân loại WHO: ${cat}`
+          ];
+        }
+      },
+      {
+        id: 20,
+        cat: 'basic',
+        title: 'Bộ đếm thời gian (Countdown Timer)',
+        desc: 'Nhập vào số giây, in ra màn hình đếm lùi từng giây kèm chuông beep (\\a) dùng time.Sleep trong Go.',
+        inputs: [
+          { id: 'ex20_sec', label: 'Số giây đếm lùi (1 đến 10)', type: 'number', val: 5 }
+        ],
+        code: `package main
+
+import (
+    "fmt"
+    "time"
+)
+
+func main() {
+    seconds := 5
+
+    fmt.Println("Bắt đầu đếm lùi...")
+    for i := seconds; i > 0; i-- {
+        // \\a là escape sequence phát âm thanh Bell / Beep của Terminal
+        fmt.Printf("Còn lại: %d giây... \\a\\n", i)
+        time.Sleep(1 * time.Second)
+    }
+
+    fmt.Println("🚀 HẾT GIỜ! BẮT ĐẦU PHÓNG TÀU!")
+}`,
+        lines: [
+          { line: '12', code: 'for i := seconds; i > 0; i-- {', exp: 'Vòng lặp đếm lùi từng bước từ số giây ban đầu giảm dần về 1.' },
+          { line: '14', code: 'fmt.Printf("Còn lại: %d giây... \\a\\n", i)', exp: '`\\a` (ASCII Bell code 0x07): Mã điều khiển terminal cổ điển phát âm thanh tiếng Beep cảnh báo trên máy chủ.' },
+          { line: '15', code: 'time.Sleep(1 * time.Second)', exp: 'Hàm tạm dừng Goroutine hiện tại trong đúng 1 giây. Tham số có kiểu an toàn `time.Duration`.' }
+        ],
+        theory: `
+          <div class="space-y-4 font-sans">
+            <div class="border-l-4 border-gopher-500 pl-4 py-1 bg-gopher-500/10 rounded-r-xl">
+              <h4 class="font-bold text-white text-base">🎯 1. Gói "time" & Kiểu Dữ Liệu time.Duration Trong Go</h4>
+              <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                Hàm <code class="text-gopher-400 font-mono">time.Sleep(d time.Duration)</code> yêu cầu tham số là kiểu <code class="text-white font-mono">time.Duration</code> (bản chất là số nguyên int64 đếm theo đơn vị nanosecond).
+                <br>Vì vậy, bạn viết <code class="text-emerald-300 font-mono">time.Sleep(1 * time.Second)</code> hoặc <code class="text-emerald-300 font-mono">500 * time.Millisecond</code> rất tự nhiên và an toàn kiểu, không bao giờ nhầm lẫn giữa giây, mili-giây hay nano-giây.
+              </p>
+            </div>
+
+            <div class="bg-darkbg p-4 rounded-2xl border border-bordercol space-y-2 text-xs">
+              <h5 class="font-bold text-sm text-yellow-400">🔔 2. Ký Tự Escape "\\a" (ASCII Bell Code 0x07)</h5>
+              <p class="text-slate-300 leading-relaxed">
+                Ký tự <code class="text-cyan-300 font-mono">\\a</code> (viết tắt của <em>Alert</em> hoặc <em>Bell</em>) là một mã điều khiển có lịch sử từ thời máy điện báo Teletype đầu thế kỷ 20. Khi thiết bị đầu cuối Terminal nhận được byte <code class="text-white font-mono">0x07</code>, nó sẽ phát lệnh cho bo mạch chủ máy tính kích hoạt loa chip phát ra tiếng "Beep" cảnh báo.
+              </p>
+            </div>
+
+            <div class="bg-darkbg p-4 rounded-2xl border border-bordercol space-y-2 text-xs">
+              <h5 class="font-bold text-sm text-cyan-400">⚡ 3. So Sánh time.Sleep vs time.Tick / time.After</h5>
+              <p class="text-slate-300 leading-relaxed">
+                <code class="text-white font-mono">time.Sleep</code> sẽ block (tạm dừng) Goroutine hiện tại. Trong các hệ thống mạng Go quy mô lớn, người ta thường dùng Channel bất đồng bộ như <code class="text-gopher-300 font-mono">ticker := time.NewTicker(1 * time.Second)</code> kết hợp với từ khóa <code class="text-gopher-300 font-mono">select</code> để vừa đếm giờ, vừa có thể nhận tín hiệu hủy (Cancellation context) bất kỳ lúc nào mà không làm tắc nghẽn luồng.
+              </p>
+            </div>
+          </div>
+        `,
+        run: async (params, appendLog) => {
+          const sec = Math.min(10, Math.max(1, parseInt(params.ex20_sec) || 5));
+          appendLog(`⏰ Bắt đầu đếm lùi ${sec} giây với time.Sleep(1s)...`);
+
+          for (let i = sec; i > 0; i--) {
+            playBeepSound();
+            appendLog(`[Tick] Còn lại: ${i} giây... 🔔 (Beep!)`);
+            await new Promise(r => setTimeout(r, 800));
+          }
+          playBeepSound();
+          appendLog(`🚀 HẾT GIỜ! BẮT ĐẦU CHƯƠNG TRÌNH GO!`);
+          return null; // Async logging handled manually
+        }
+      }
+    ];
+
+    // State management
+    let activeExerciseId = 1;
+    let completedExercises = new Set();
+    let currentCategory = 'all';
+
+    function renderExerciseList() {
+      const container = document.getElementById('exerciseListContainer');
+      const searchVal = document.getElementById('exerciseSearchInput').value.toLowerCase().trim();
+
+      const filtered = exercisesData.filter(item => {
+        const matchCat = currentCategory === 'all' || item.cat === currentCategory;
+        const matchSearch = item.title.toLowerCase().includes(searchVal) ||
+                            item.desc.toLowerCase().includes(searchVal) ||
+                            item.id.toString() === searchVal;
+        return matchCat && matchSearch;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="p-6 text-center text-xs text-slate-500 font-mono">Không tìm thấy bài tập nào khớp với "${searchVal}".</div>`;
+        return;
+      }
+
+      container.innerHTML = filtered.map(item => {
+        const isActive = item.id === activeExerciseId;
+        const isDone = completedExercises.has(item.id);
+        return `
+          <button onclick="selectExercise(${item.id})" class="w-full text-left p-3 rounded-xl border transition-all flex items-start gap-3 ${
+            isActive ? 'nav-active border-gopher-500 bg-gopher-500/10' : 'border-bordercol bg-darkbg hover:border-slate-600'
+          }">
+            <span class="font-mono text-xs font-bold w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 ${
+              isDone ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-slate-800 text-slate-400'
+            }">
+              ${isDone ? '✓' : item.id}
+            </span>
+            <div class="flex-1 min-w-0">
+              <h4 class="font-bold text-xs sm:text-sm text-white truncate">${item.title}</h4>
+              <p class="text-[11px] text-slate-400 line-clamp-1 mt-0.5">${item.desc}</p>
+            </div>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function selectExercise(id) {
+      activeExerciseId = id;
+      const item = exercisesData.find(x => x.id === id);
+      if (!item) return;
+
+      // Update Banner
+      document.getElementById('bannerIndex').textContent = `Bài #${item.id < 10 ? '0' + item.id : item.id}`;
+      document.getElementById('bannerCategory').textContent = item.cat;
+      document.getElementById('bannerTitle').textContent = item.title;
+      document.getElementById('bannerDesc').textContent = item.desc;
+
+      // Update Done Button Status
+      const btnDone = document.getElementById('btnMarkDone');
+      if (completedExercises.has(item.id)) {
+        btnDone.className = 'text-xs px-3 py-1 rounded-xl bg-emerald-500/20 text-emerald-300 font-medium transition flex items-center gap-1.5 border border-emerald-500/40';
+        btnDone.innerHTML = `<span>✓ Đã hiểu bài này</span>`;
+      } else {
+        btnDone.className = 'text-xs px-3 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium transition flex items-center gap-1.5 border border-bordercol';
+        btnDone.innerHTML = `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg><span>Đánh dấu đã hiểu</span>`;
+      }
+
+      // Render Dynamic Inputs
+      const inputsArea = document.getElementById('interactiveInputsArea');
+      inputsArea.innerHTML = item.inputs.map(inp => {
+        if (inp.type === 'select') {
+          return `
+            <div class="space-y-1.5">
+              <label class="text-xs font-bold text-slate-300">${inp.label}:</label>
+              <select id="${inp.id}" class="w-full bg-darkbg border border-bordercol rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-gopher-400 font-mono">
+                ${inp.options.map(opt => `<option value="${opt}" ${opt === inp.val ? 'selected' : ''}>${opt}</option>`).join('')}
+              </select>
+            </div>
+          `;
+        }
+        return `
+          <div class="space-y-1.5">
+            <label class="text-xs font-bold text-slate-300">${inp.label}:</label>
+            <input type="${inp.type}" id="${inp.id}" value="${inp.val}" class="w-full bg-darkbg border border-bordercol rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-gopher-400 font-mono">
+          </div>
+        `;
+      }).join('');
+
+      // Render Code View
+      document.getElementById('goSourceCodeDisplay').textContent = item.code;
+
+      // Render Line-by-Line Breakdown
+      const linesContainer = document.getElementById('linesContentContainer');
+      if (item.lines && item.lines.length > 0) {
+        linesContainer.innerHTML = item.lines.map((lineItem, idx) => `
+          <div class="p-4 rounded-2xl bg-darkbg border border-bordercol hover:border-cyan-500/40 transition space-y-2.5">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-xs px-2.5 py-0.5 rounded-lg bg-gopher-500/10 text-gopher-400 border border-gopher-500/30 font-bold">
+                Dòng ${lineItem.line}
+              </span>
+              <span class="text-[11px] font-mono text-slate-500">Mục #${idx+1}</span>
+            </div>
+            <div class="bg-terminalbg p-3 rounded-xl border border-bordercol/80 font-mono text-xs text-emerald-300 overflow-x-auto whitespace-pre">${lineItem.code}</div>
+            <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">${lineItem.exp}</p>
+          </div>
+        `).join('');
+      } else {
+        linesContainer.innerHTML = `<div class="p-4 text-center text-slate-500 font-mono text-xs">Đang cập nhật giải thích từng dòng...</div>`;
+      }
+
+      // Render Theory View
+      document.getElementById('theoryContentContainer').innerHTML = item.theory;
+
+      // Reset Terminal with helpful hint
+      document.getElementById('terminalOutput').innerHTML = `<span class="text-slate-500 italic">// Bấm nút "Chạy Thử Nghiệm Code" phía trên để thực thi bài #${item.id}...</span>`;
+
+      renderExerciseList();
+    }
+
+    let isExecuting = false;
+    async function executeCurrentExercise() {
+      if (isExecuting) return;
+      const item = exercisesData.find(x => x.id === activeExerciseId);
+      if (!item) return;
+
+      const params = {};
+      item.inputs.forEach(inp => {
+        const el = document.getElementById(inp.id);
+        if (el) params[inp.id] = el.value;
+      });
+
+      const term = document.getElementById('terminalOutput');
+      const timerEl = document.getElementById('execTimer');
+      const t0 = performance.now();
+
+      term.innerHTML = '';
+      isExecuting = true;
+
+      const appendLine = (text) => {
+        const p = document.createElement('div');
+        p.textContent = text;
+        term.appendChild(p);
+        term.scrollTop = term.scrollHeight;
+      };
+
+      try {
+        const result = await item.run(params, appendLine);
+        if (Array.isArray(result)) {
+          result.forEach(line => appendLine(line));
+        }
+      } catch (err) {
+        appendLine(`[Panic / Runtime Error]: ${err.message}`);
+      }
+
+      const t1 = performance.now();
+      timerEl.textContent = `Execution time: ${(t1 - t0).toFixed(2)}ms`;
+      isExecuting = false;
+    }
+
+    function clearTerminal() {
+      document.getElementById('terminalOutput').innerHTML = `<span class="text-slate-500 italic">// Terminal đã được xóa sạch.</span>`;
+    }
+
+    function markAsDone() {
+      if (completedExercises.has(activeExerciseId)) {
+        completedExercises.delete(activeExerciseId);
+      } else {
+        completedExercises.add(activeExerciseId);
+      }
+      document.getElementById('completedCounter').textContent = completedExercises.size;
+      selectExercise(activeExerciseId);
+    }
+
+    function copyCurrentCode() {
+      const code = document.getElementById('goSourceCodeDisplay').textContent;
+      const btn = document.getElementById('copyCodeText');
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(code).then(() => {
+          btn.textContent = 'Đã chép!';
+          setTimeout(() => { btn.textContent = 'Copy Code'; }, 1800);
+        });
+      } else {
+        const ta = document.createElement('textarea');
+        ta.value = code;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        btn.textContent = 'Đã chép!';
+        setTimeout(() => { btn.textContent = 'Copy Code'; }, 1800);
+      }
+    }
+
+    function switchTab(tab) {
+      const codeBtn = document.getElementById('tab-code-btn');
+      const linesBtn = document.getElementById('tab-lines-btn');
+      const theoryBtn = document.getElementById('tab-theory-btn');
+      const codePanel = document.getElementById('tab-code-panel');
+      const linesPanel = document.getElementById('tab-lines-panel');
+      const theoryPanel = document.getElementById('tab-theory-panel');
+
+      // Reset all buttons
+      [codeBtn, linesBtn, theoryBtn].forEach(btn => {
+        btn.className = 'px-4 py-2 rounded-t-xl text-xs sm:text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-white transition whitespace-nowrap';
+      });
+
+      // Hide all panels
+      codePanel.classList.add('hidden');
+      linesPanel.classList.add('hidden');
+      theoryPanel.classList.add('hidden');
+
+      if (tab === 'code') {
+        codeBtn.className = 'px-4 py-2 rounded-t-xl text-xs sm:text-sm font-semibold border-b-2 border-gopher-400 text-white bg-cardbg transition whitespace-nowrap';
+        codePanel.classList.remove('hidden');
+      } else if (tab === 'lines') {
+        linesBtn.className = 'px-4 py-2 rounded-t-xl text-xs sm:text-sm font-semibold border-b-2 border-cyan-400 text-cyan-300 bg-cardbg transition whitespace-nowrap';
+        linesPanel.classList.remove('hidden');
+      } else {
+        theoryBtn.className = 'px-4 py-2 rounded-t-xl text-xs sm:text-sm font-semibold border-b-2 border-gopher-400 text-white bg-cardbg transition whitespace-nowrap';
+        theoryPanel.classList.remove('hidden');
+      }
+    }
+
+    function setCategoryFilter(cat) {
+      currentCategory = cat;
+      document.querySelectorAll('.cat-pill').forEach(btn => {
+        btn.className = 'cat-pill px-3 py-1.5 rounded-xl hover:text-white text-slate-400 transition';
+      });
+      const activeBtn = document.getElementById('cat-' + cat);
+      if (activeBtn) {
+        activeBtn.className = 'cat-pill active px-3 py-1.5 rounded-xl bg-gopher-500 text-slate-950 font-bold transition';
+      }
+      renderExerciseList();
+    }
+
+    function filterExercises() {
+      renderExerciseList();
+    }
+
+    // Keyboard shortcut (Cmd+K / Ctrl+K) to focus search
+    window.addEventListener('keydown', (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        const el = document.getElementById('exerciseSearchInput');
+        if (el) el.focus();
+      }
+    });
+
+    // Initial load
+    renderExerciseList();
+    selectExercise(1);
+  </script>
+</body>
+</html>
